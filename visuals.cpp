@@ -31,7 +31,7 @@ static bool light1_state = false, light2_state = false;
 float light1_x=0, light1_y=20, light1_z=0,light2_x=0, light2_y=20, light2_z=0;
 float light_angle=0.03;
 
-static int render_object=0;
+static int render_object=0;    
 std::vector<Point> normal;
 std::vector<Point> vertNormal;
 
@@ -53,22 +53,14 @@ void Render()
   if (render_object==0){
 	  obj_file = "objects/unicorn_low.obj";
 	  loadObj(obj_file, vertices, triangles, hornTriangles);
-	  render_object=2;
+	  render_object=3;
 	  
 	  normal.clear();
 	  for (int i=0; i<triangles.size(); i++)
 	  {
 		  Point n;
-		  Point a1, a2;
-		  a1.x=vertices.at(triangles.at(i).p2).x-vertices.at(triangles.at(i).p1).x; 
-		  a1.y=vertices.at(triangles.at(i).p2).y-vertices.at(triangles.at(i).p1).y; 
-		  a1.z=vertices.at(triangles.at(i).p2).z-vertices.at(triangles.at(i).p1).z;
 
-		  a2.x=vertices.at(triangles.at(i).p3).x-vertices.at(triangles.at(i).p1).x; 
-		  a2.y=vertices.at(triangles.at(i).p3).y-vertices.at(triangles.at(i).p1).y; 
-		  a2.z=vertices.at(triangles.at(i).p3).z-vertices.at(triangles.at(i).p1).z;
-		  n = CalcNormal(a1, a2);
-
+		  n = CalcNormal( triangles.at(i) );
 		  normal.push_back( n );
 	  }
 
@@ -77,24 +69,32 @@ void Render()
   else if (render_object==1){
 	  obj_file = "objects/hand.obj";
 	  loadObj(obj_file, vertices, triangles, hornTriangles);
-	  render_object=2;
+	  render_object=3;
 
 	  normal.clear();
 	  for (int i=0; i<triangles.size(); i++)
 	  {
 		  Point n;
-		  Point a1, a2;
-		  a1.x=vertices.at(triangles.at(i).p2).x-vertices.at(triangles.at(i).p1).x; 
-		  a1.y=vertices.at(triangles.at(i).p2).y-vertices.at(triangles.at(i).p1).y; 
-		  a1.z=vertices.at(triangles.at(i).p2).z-vertices.at(triangles.at(i).p1).z;
 
-		  a2.x=vertices.at(triangles.at(i).p3).x-vertices.at(triangles.at(i).p1).x; 
-		  a2.y=vertices.at(triangles.at(i).p3).y-vertices.at(triangles.at(i).p1).y; 
-		  a2.z=vertices.at(triangles.at(i).p3).z-vertices.at(triangles.at(i).p1).z;
-		  n = CalcNormal(a1, a2);
-
+		  n = CalcNormal( triangles.at(i));
 		  normal.push_back(n);
 	  }
+	  avgNormals(triangles, vertices);
+  }
+  else if (render_object==2){
+	  obj_file = "objects/unicorn.obj";
+	  loadObj(obj_file, vertices, triangles, hornTriangles);
+	  render_object=3;
+
+	  normal.clear();
+	  for (int i=0; i<triangles.size(); i++)
+	  {
+		  Point n;
+
+		  n = CalcNormal( triangles.at(i));
+		  normal.push_back(n);
+	  }
+	  avgNormals(triangles, vertices);
   }
 
   //-------draw background------
@@ -125,24 +125,26 @@ void Render()
 	  glRotatef(rotz,0,0,1);
 
 	  glScalef( scalex, scaley, scalez);
+
 	  showObj(vertices, triangles, solid, wireframe, normal, horseTexture);
 	  showObj(vertices, hornTriangles, solid, wireframe, normal, hornTexture);
   glPopMatrix();
 
-  // draw spheres for light
-  if (light1_state==true){
-	  glPushMatrix();
-		  glColor3f(0.8,0.8,0.0);
-		  glTranslatef(tx+light1_x,ty+light1_y,tz+light1_z);
-		  glutSolidSphere(2,20,20);
-	  glPopMatrix();}
+	   // draw spheres for light
+	  if (light1_state==true){
+		  glPushMatrix();
+			  glColor3f(0.8,0.8,0.0);
+			  glTranslatef( tx+light1_x, ty+light1_y, tz+light1_z);
+			  printf(" %f  %f  %f\n", light1_x,light1_y,light1_z);
+			  glutSolidSphere(2,20,20);
+		  glPopMatrix();}
 
-  if (light2_state==true){
-	  glPushMatrix();
-		  glColor3f(0.0, 0.4,0.4);
-		  glTranslatef(tx+light2_x,ty+light2_y,tz+light2_z);
-		  glutSolidSphere(2,20,20);
-	  glPopMatrix();}
+	  if (light2_state==true){
+		  glPushMatrix();
+			  glColor3f(0.0, 0.4,0.4);
+			  glTranslatef(tx+light2_x,ty+light2_y,tz+light2_z);
+			  glutSolidSphere(2,20,20);
+		  glPopMatrix();}
 
   glutSwapBuffers();             // All drawing commands applied to the 
                                  // hidden buffer, so now, bring forward
@@ -154,6 +156,8 @@ void Render()
 void avgNormals(std::vector<Triangle> triangle,std::vector<Point> vertice)
 {
 	std::vector<int> cnt;
+
+	vertNormal.clear();
 
 	for (int i=0; i<vertice.size(); i++) {
 		Point zero;
@@ -188,6 +192,34 @@ void avgNormals(std::vector<Triangle> triangle,std::vector<Point> vertice)
 		vertNormal.at(i).y= vertNormal.at(i).y/cnt.at(i);
 		vertNormal.at(i).z= vertNormal.at(i).z/cnt.at(i);
 	}
+}
+
+Point CalcNormal( Triangle triangle)
+{
+	Point v1,v2;
+	v1.x=vertices.at(triangle.p2).x-vertices.at(triangle.p1).x; 
+	v1.y=vertices.at(triangle.p2).y-vertices.at(triangle.p1).y; 
+	v1.z=vertices.at(triangle.p2).z-vertices.at(triangle.p1).z;
+
+	v2.x=vertices.at(triangle.p3).x-vertices.at(triangle.p1).x; 
+	v2.y=vertices.at(triangle.p3).y-vertices.at(triangle.p1).y; 
+	v2.z=vertices.at(triangle.p3).z-vertices.at(triangle.p1).z;
+
+	Point normal;
+
+	normal.x = v1.y*v2.z - v1.z*v2.y;		
+	normal.y = -v1.x*v2.z + v2.x*v1.z;
+	normal.z = v1.x*v2.y - v2.x*v1.y;
+
+	float dist1 = sqrt( pow(v1.x,2) + pow(v1.y,2) + pow(v1.z,2));
+	float dist2 = sqrt( pow(v2.x,2) + pow(v2.y,2) + pow(v2.z,2));
+	float dist = dist1*dist2;
+
+	normal.x = normal.x/dist;
+	normal.y = normal.y/dist;
+	normal.z = normal.z/dist;
+
+	return normal;
 }
 
 int loadTexture(const char *filename)
@@ -337,6 +369,7 @@ void Keyboard(unsigned char key,int x,int y)
 		//----------- select object to render -----------------------
 		case '1': render_object = 0; break;
 		case '2': render_object = 1; break;
+		case '3': render_object = 2; break;
 		default : break;
 		}	
 
@@ -463,11 +496,11 @@ void Idle()
 		if (light_angle<360) light_angle+=4;
 		else light_angle=0.0; 
 
-		light1_x = 10*cos(light_angle*3.14/180)+50;
+		light1_x = 10*cos(light_angle*3.14/180);
 		light1_z = 15*sin(light_angle*3.14/180);	
 
-		light2_x = -10*cos(light_angle*3.14/180)+50;
-		light2_z = -15*sin(light_angle*3.14/180);
+		light2_x = -20*cos(light_angle*3.14/180);
+		light2_z = -25*sin(light_angle*3.14/180);
 
 		GLfloat light_position1[] = { light1_x, light1_y, light1_z, 1.0 };
 		GLfloat light_position2[] = { light2_x, light2_y, light2_z, 1.0 };
@@ -475,7 +508,7 @@ void Idle()
 		glLightfv( GL_LIGHT1, GL_POSITION, light_position1);
 		glLightfv( GL_LIGHT2, GL_POSITION, light_position2);
 
-		GLfloat specularLight1[] = { 1.0, 0.7, 0.0, 1.0 };
+		GLfloat specularLight1[] = { 1.0, 1.0, 1.0, 1.0 };
 		GLfloat specularLight2[] = { 0.0, 0.6, 0.6, 1.0 };
 
 		glLightfv( GL_LIGHT1, GL_SPECULAR, specularLight1 );
@@ -508,32 +541,11 @@ void MenuSelect(int choice)
 	}
 }
 
-Point CalcNormal(Point v1, Point v2)
-{
-	Point normal;
-
-	normal.x = v1.y*v2.z - v1.z*v2.y;		
-	normal.y = -v1.x*v2.z + v2.x*v1.z;
-	normal.z = v1.x*v2.y - v2.x*v1.y;
-
-	float dist1 = sqrt( pow(v1.x,2) + pow(v1.y,2) + pow(v1.z,2));
-	float dist2 = sqrt( pow(v2.x,2) + pow(v2.y,2) + pow(v2.z,2));
-	float dist = dist1*dist2;
-
-	normal.x = normal.x/dist;
-	normal.y = normal.y/dist;
-	normal.z = normal.z/dist;
-
-	return normal;
-}
-
 void Setup()  // TOUCH IT !! 
 { 
 	glEnable(GL_LIGHTING);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_COLOR_MATERIAL);
-
-	//Parameter handling
 	glShadeModel (GL_SMOOTH);
 	//glEnable(GL_NORMALIZE); 
 	
@@ -542,7 +554,7 @@ void Setup()  // TOUCH IT !!
       
 	//Set up light source
 	GLfloat light_position[] = { 20.0, 0.0, 0.0, 0.0 };
-	GLfloat ambientLight[] = { 0.3, 0.3, 0.3, 1.0 };
+	GLfloat ambientLight[] = { 0.3f, 0.3f, 0.3f, 1.0 };
 	GLfloat diffuseLight[] = { 0.8f, 0.8f, 0.8f, 1.0 };
 	
 	glLightfv( GL_LIGHT0, GL_POSITION, light_position);
@@ -557,17 +569,16 @@ void Setup()  // TOUCH IT !!
 	
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CCW);
-
-
-	glColorMaterial( GL_FRONT, GL_EMISSION );
+	
+	glColorMaterial( GL_FRONT, GL_AMBIENT_AND_DIFFUSE );
 	// material identities
 	float specReflection[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	float ambReflection[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	float diffReflection[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+//	float ambReflection[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+//	float diffReflection[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	glMaterialfv(GL_FRONT, GL_SPECULAR, specReflection);
-	glMaterialfv(GL_FRONT, GL_AMBIENT, ambReflection);
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffReflection);
-	glMateriali(GL_FRONT,GL_SHININESS,20);
+//	glMaterialfv(GL_FRONT, GL_AMBIENT, ambReflection);
+//	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffReflection);
+	glMateriali(GL_FRONT,GL_SHININESS,60);
 
 
 	//// about texture

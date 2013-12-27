@@ -23,6 +23,7 @@ void loadObj(std::string filename, std::vector<Point> &vertices, std::vector<Tri
 
 	triangles.clear();
 	vertices.clear();
+	hornTriangles.clear();
 
 	float avg=0, cnt=0;
 
@@ -41,7 +42,7 @@ void loadObj(std::string filename, std::vector<Point> &vertices, std::vector<Tri
 				v.y=v.y-51;
 				v.z=v.z-65;
 			}
-			avg+=v.z;
+			avg+=v.x;
 			cnt++;
 
             vertices.push_back(v);

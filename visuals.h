@@ -52,7 +52,7 @@ void Motion(int x, int y);
 
 void MenuSelect(int choice);
 
-Point CalcNormal(Point v1, Point v2);
+Point CalcNormal( Triangle triangle);
 
 int loadTexture(const char *filename);
 
