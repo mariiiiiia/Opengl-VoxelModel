@@ -133,7 +133,7 @@ void Render()
   if (light1_state==true){
 	  glPushMatrix();
 		  glColor3f(0.8,0.8,0.0);
-		  glTranslatef(tx+light1_x+30,ty+light1_y,tz+light1_z);
+		  glTranslatef(tx+light1_x,ty+light1_y,tz+light1_z);
 		  glutSolidSphere(2,20,20);
 	  glPopMatrix();}
 
@@ -285,7 +285,7 @@ void Keyboard(unsigned char key,int x,int y)
 			if (horseTexture==NULL) 
 			{
 				horseTexture = loadTexture("images/horse1.png");
-				hornTexture = loadTexture("images/horn4.png");
+				hornTexture = loadTexture("images/horn1.png");
 			}
 			break;
 		}
@@ -299,17 +299,17 @@ void Keyboard(unsigned char key,int x,int y)
 			break;
 		}
 		//---------- movement on x-y-z ------------------
-		case 'q' : tx-=2.0f;
+		case 'q' : tx-=1.0f;
 			break;
-		case 'w': tx+=2.0f;
+		case 'w': tx+=1.0f;
 			break;
-		case 'a' : ty-=2.0f;
+		case 'a' : ty-=1.0f;
 			break;
-		case 's': ty+=2.0f;
+		case 's': ty+=1.0f;
 			break;
-		case 'z' : tz-=2.0f;
+		case 'z' : tz-=1.0f;
 			break;
-		case 'x': tz+=2.0f;
+		case 'x': tz+=1.0f;
 			break;
 		//---------- rotation --------------------------
 		case 'o' : rotx-=2.0f;
@@ -463,11 +463,11 @@ void Idle()
 		if (light_angle<360) light_angle+=4;
 		else light_angle=0.0; 
 
-		light1_x = 20*cos(light_angle*3.14/180);
-		light1_z = 45*sin(light_angle*3.14/180);	
+		light1_x = 10*cos(light_angle*3.14/180)+50;
+		light1_z = 15*sin(light_angle*3.14/180);	
 
-		light2_x = -20*cos(light_angle*3.14/180);
-		light2_z = -45*sin(light_angle*3.14/180);
+		light2_x = -10*cos(light_angle*3.14/180)+50;
+		light2_z = -15*sin(light_angle*3.14/180);
 
 		GLfloat light_position1[] = { light1_x, light1_y, light1_z, 1.0 };
 		GLfloat light_position2[] = { light2_x, light2_y, light2_z, 1.0 };
