@@ -28,7 +28,7 @@ static float rotx = 0.0, roty=0.0, rotz=0.0;
 //------------- variables for object rendering and lights -----------
 static bool solid=true, wireframe=false;
 static bool light1_state = false, light2_state = false;
-float light1_x=0, light1_y=20, light1_z=0,light2_x=0, light2_y=20, light2_z=0;
+float light1_x=0, light1_y=0, light1_z=0,light2_x=0, light2_y=0, light2_z=0;
 float light_angle=0.03;
 
 static int render_object=0;    
@@ -131,20 +131,20 @@ void Render()
   glPopMatrix();
 
 	   // draw spheres for light
-	  if (light1_state==true){
-		  glPushMatrix();
-			  glColor3f(0.8,0.8,0.0);
-			  glTranslatef( tx+light1_x, ty+light1_y, tz+light1_z);
-			  printf(" %f  %f  %f\n", light1_x,light1_y,light1_z);
-			  glutSolidSphere(2,20,20);
-		  glPopMatrix();}
+  if (light1_state==true){
+	  glPushMatrix();
+		  glColor3f(0.8,0.8,0.0);
+		  glTranslatef( tx+light1_x, ty+light1_y, tz+light1_z);
+		  printf(" %f  %f  %f\n", light1_x,light1_y,light1_z);
+		  glutSolidSphere(1,20,20);
+	  glPopMatrix();}
 
-	  if (light2_state==true){
-		  glPushMatrix();
-			  glColor3f(0.0, 0.4,0.4);
-			  glTranslatef(tx+light2_x,ty+light2_y,tz+light2_z);
-			  glutSolidSphere(2,20,20);
-		  glPopMatrix();}
+  if (light2_state==true){
+	  glPushMatrix();
+		  glColor3f(0.0, 0.4,0.4);
+		  glTranslatef(tx+light2_x,ty+light2_y,tz+light2_z);
+		  glutSolidSphere(1,20,20);
+	  glPopMatrix();}
 
   glutSwapBuffers();             // All drawing commands applied to the 
                                  // hidden buffer, so now, bring forward
@@ -499,8 +499,8 @@ void Idle()
 		light1_x = 10*cos(light_angle*3.14/180);
 		light1_z = 15*sin(light_angle*3.14/180);	
 
-		light2_x = -20*cos(light_angle*3.14/180);
-		light2_z = -25*sin(light_angle*3.14/180);
+		light2_x = -10*cos(light_angle*3.14/180);
+		light2_z = -15*sin(light_angle*3.14/180);
 
 		GLfloat light_position1[] = { light1_x, light1_y, light1_z, 1.0 };
 		GLfloat light_position2[] = { light2_x, light2_y, light2_z, 1.0 };
@@ -509,7 +509,7 @@ void Idle()
 		glLightfv( GL_LIGHT2, GL_POSITION, light_position2);
 
 		GLfloat specularLight1[] = { 1.0, 1.0, 1.0, 1.0 };
-		GLfloat specularLight2[] = { 0.0, 0.6, 0.6, 1.0 };
+		GLfloat specularLight2[] = { 1.0, 1.0, 0.8, 1.0 };
 
 		glLightfv( GL_LIGHT1, GL_SPECULAR, specularLight1 );
 		glLightfv( GL_LIGHT2, GL_SPECULAR, specularLight2 );

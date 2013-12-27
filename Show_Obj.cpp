@@ -23,6 +23,7 @@ void showObj(std::vector<Point> &vert, std::vector<Triangle> &tr, bool solid,boo
 		for (int i=0; i<tr.size(); i++)								
 		{
 			if (texture!= NULL && tr.size()>400){				// body texture
+				glColor4f(0.5,0.5,0.6,1.0);
 				// material identities
 				float specReflection[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 				float ambReflection[] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -66,6 +67,7 @@ void showObj(std::vector<Point> &vert, std::vector<Triangle> &tr, bool solid,boo
 				glDisable(GL_TEXTURE_2D);
 			}
 			else if (texture!= NULL && tr.size()<400){						// horn texture
+				glColor4f(0.5,0.5,0.6,1.0);
 				// material identities
 				float specReflection[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 				glMaterialfv(GL_FRONT, GL_SPECULAR, specReflection);
