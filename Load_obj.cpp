@@ -36,7 +36,7 @@ void loadObj(std::string filename, std::vector<Point> &vertices, std::vector<Tri
             sscanf(&line[1],"%f %f %f", &v.x, &v.y, &v.z);
 
 			// bring object (unicorn - high resolution) at the center of x-y-z axes
-			if (obj_file=="unicorn.obj"){
+			if (obj_file=="objects/unicorn.obj"){
 				v.x=v.x-21;
 				v.y=v.y-51;
 				v.z=v.z-65;
@@ -75,7 +75,7 @@ void loadObj(std::string filename, std::vector<Point> &vertices, std::vector<Tri
 			}
 
 
-			if (obj_file=="unicorn.obj"){
+			if (obj_file=="objects/unicorn.obj"){
 				if ( vertices.at(tr.p1).z<-40 && vertices.at(tr.p1).y>29) hornTriangles.push_back(tr);
 				else triangles.push_back(tr);
 			}

@@ -51,7 +51,7 @@ void Render()
   
   //----- select which object will be loaded and calculate its normals-------
   if (render_object==0){
-	  obj_file = "unicorn_low.obj";
+	  obj_file = "objects/unicorn_low.obj";
 	  loadObj(obj_file, vertices, triangles, hornTriangles);
 	  render_object=2;
 	  
@@ -75,7 +75,7 @@ void Render()
 	  avgNormals(triangles, vertices);
   }
   else if (render_object==1){
-	  obj_file = "hand.obj";
+	  obj_file = "objects/hand.obj";
 	  loadObj(obj_file, vertices, triangles, hornTriangles);
 	  render_object=2;
 
@@ -103,15 +103,15 @@ void Render()
 
 
   //---- bring object at the center of the window show we can see it -----------
-  if (obj_file=="unicorn.obj"){
+  if (obj_file=="objects/unicorn.obj"){
 	  glTranslatef(0,0,-100);
 	  glRotatef(90,0,1,0);
   }
-  else if (obj_file=="unicorn_low.obj"){
+  else if (obj_file=="objects/unicorn_low.obj"){
 	  glTranslatef(0,0,-15);
 	  glRotatef(90,0,1,0);
   }
-  else if (obj_file=="hand.obj"){
+  else if (obj_file=="objects/hand.obj"){
 	  glTranslatef(0,0,-50);
   }
   //---------------------------------------------------------
