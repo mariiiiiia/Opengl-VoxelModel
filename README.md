@@ -7,3 +7,5 @@ u: undo putting texture
 
 1: render object '1' 
 2: render obect '2'
+
+right-click inside the window and select your menu choices
