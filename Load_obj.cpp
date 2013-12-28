@@ -8,6 +8,10 @@
                        //   management library
 #include "visuals.h"   // Header file for our OpenGL functions
 #include "Load_obj.h"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+using namespace std;
 
 
 
@@ -20,30 +24,18 @@ void loadObj(std::string filename, std::vector<Point> &vertices, std::vector<Tri
     int f1, f2, f3;		//pointers from triangles to their points
     char line[128];
     FILE *objfile;
-
+		
 	triangles.clear();
 	vertices.clear();
 	hornTriangles.clear();
 
-	float avg=0, cnt=0;
-
     if (!(objfile = fopen(filename.c_str(), "rt"))) return;
-
 
     while (fgets(line, 128, objfile)) {
         switch (line[0]) {
 		// create an array with the point cloud of the object
         case 'v':
             sscanf(&line[1],"%f %f %f", &v.x, &v.y, &v.z);
-
-			// bring object (unicorn - high resolution) at the center of x-y-z axes
-			if (obj_file=="objects/unicorn.obj"){
-				v.x=v.x-21;
-				v.y=v.y-51;
-				v.z=v.z-65;
-			}
-			avg+=v.x;
-			cnt++;
 
             vertices.push_back(v);
             break;
@@ -75,9 +67,9 @@ void loadObj(std::string filename, std::vector<Point> &vertices, std::vector<Tri
 				tr.p3=temp3;
 			}
 
-
-			if (obj_file=="objects/unicorn.obj"){
-				if ( vertices.at(tr.p1).z<-40 && vertices.at(tr.p1).y>29) hornTriangles.push_back(tr);
+			if (obj_file=="objects/unicorn_low.obj"){
+				if ( vertices.at(tr.p1).z<-4.07 && vertices.at(tr.p2).z<-4.07 && vertices.at(tr.p3).z<-4.07 && vertices.at(tr.p1).y>2.9 && vertices.at(tr.p2).y>2.9 && vertices.at(tr.p3).y>2.9){
+					hornTriangles.push_back(tr);}
 				else triangles.push_back(tr);
 			}
 			else triangles.push_back(tr);
@@ -86,8 +78,6 @@ void loadObj(std::string filename, std::vector<Point> &vertices, std::vector<Tri
             continue;
         };
     }
-	avg=avg/cnt;
-	printf("avg=%f\n",avg);
     fclose(objfile);
 }
 

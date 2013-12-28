@@ -59,6 +59,7 @@ int main(int argc, char* argv[])
   
   // Callbacks for the GL and GLUT events:
 
+  obj_file="objects/unicorn_low.obj";
   // The rendering function 
   glutDisplayFunc(Render);
   glutReshapeFunc(Resize);

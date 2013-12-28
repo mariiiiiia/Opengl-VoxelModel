@@ -23,6 +23,7 @@ extern std::vector<Triangle> triangles;
 extern std::vector<Triangle> hornTriangles;
 
 extern std::string obj_file;
+//static std::string obj_file;
 
 //-------- Functions --------------------------------
 
@@ -51,6 +52,8 @@ void Mouse(int button,int state,int x,int y);
 void Motion(int x, int y);
 
 void MenuSelect(int choice);
+
+void lightSources();
 
 Point CalcNormal( Triangle triangle);
 
