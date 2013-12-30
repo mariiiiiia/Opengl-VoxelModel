@@ -13,7 +13,7 @@ class Point{
 
 class Triangle {
 	public:
-		int p1;
+		int p1;  // pointers to vertices
 		int p2;
 		int p3;
 };

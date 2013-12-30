@@ -31,8 +31,9 @@ static bool light1_state = false, light2_state = false;
 float light1_x=0, light1_y=-1, light1_z=0,light2_x=0, light2_y=-1, light2_z=0;
 float light_angle=0.03;
 
-std::vector<Point> normal;
-std::vector<Point> vertNormal;
+// normals
+std::vector<Point> normal;      // normal per face
+std::vector<Point> vertNormal;  // normal per vertice
 
 // ----------TEXTURES ------------------
 static int horseTexture, hornTexture, handTexture, floorTexture;
@@ -81,7 +82,7 @@ void Render()
   drawFloor();
 
 
-  //---- bring object at the center of the window show we can see it -----------
+  //---- bring object at the center of the window so we can see it -----------
   if (obj_file=="objects/unicorn_low.obj"){
 	  glTranslatef(0,0,-15);
 	  glRotatef(90,0,1,0);
@@ -103,9 +104,11 @@ void Render()
 	  glScalef( scalex, scaley, scalez);
 
 	  if (obj_file=="objects/unicorn_low.obj"){
-		  glMateriali(GL_FRONT,GL_SHININESS,10);
+		  glColor4f(0.5,0.5,0.6,1.0);
+		  glMateriali(GL_FRONT,GL_SHININESS,50);
 		  showObj(vertices, triangles, solid, wireframe, normal, horseTexture);
-		  glMateriali(GL_FRONT,GL_SHININESS,2);
+		  glColor4f(1,1,1,1.0);
+		  glMateriali(GL_FRONT,GL_SHININESS,128);
 		  showObj(vertices, hornTriangles, solid, wireframe, normal, hornTexture);
 	  }
 	  else if (obj_file=="objects/hand.obj"){
@@ -118,7 +121,6 @@ void Render()
   if (light1_state==true){
 	  glPushMatrix();
 		  glColor3f( 0.1, 0.8, 0.0);
-		  //glTranslatef( tx+light1_x, ty+light1_y, tz+light1_z);
 		  glTranslatef(-4,5,-8);
 		  glutSolidSphere(0.5,20,20);
 	  glPopMatrix();}
@@ -126,7 +128,6 @@ void Render()
   if (light2_state==true){
 	  glPushMatrix();
 		  glColor3f( 1.0, 0.0, 0.0);
-		  //glTranslatef(tx+light2_x,ty+light2_y,tz+light2_z);
 		  glTranslatef(-4,5,8);
 		  glutSolidSphere(0.5,20,20);
 	  glPopMatrix();}
@@ -137,6 +138,34 @@ void Render()
 }
 
 //-----------------------------------------------------------
+
+Point CalcNormal( Triangle triangle)
+{
+	Point v1,v2;
+	v1.x=vertices.at(triangle.p2).x-vertices.at(triangle.p1).x; 
+	v1.y=vertices.at(triangle.p2).y-vertices.at(triangle.p1).y; 
+	v1.z=vertices.at(triangle.p2).z-vertices.at(triangle.p1).z;
+
+	v2.x=vertices.at(triangle.p3).x-vertices.at(triangle.p1).x; 
+	v2.y=vertices.at(triangle.p3).y-vertices.at(triangle.p1).y; 
+	v2.z=vertices.at(triangle.p3).z-vertices.at(triangle.p1).z;
+
+	Point normal;
+
+	normal.x = v1.y*v2.z - v1.z*v2.y;		
+	normal.y = -v1.x*v2.z + v2.x*v1.z;
+	normal.z = v1.x*v2.y - v2.x*v1.y;
+
+	float dist1 = sqrt( pow(v1.x,2) + pow(v1.y,2) + pow(v1.z,2));
+	float dist2 = sqrt( pow(v2.x,2) + pow(v2.y,2) + pow(v2.z,2));
+	float dist = dist1*dist2;
+
+	normal.x = normal.x/dist;
+	normal.y = normal.y/dist;
+	normal.z = normal.z/dist;
+
+	return normal;
+}
 
 void avgNormals(std::vector<Triangle> triangle,std::vector<Point> vertice)
 {
@@ -179,34 +208,6 @@ void avgNormals(std::vector<Triangle> triangle,std::vector<Point> vertice)
 	}
 }
 
-Point CalcNormal( Triangle triangle)
-{
-	Point v1,v2;
-	v1.x=vertices.at(triangle.p2).x-vertices.at(triangle.p1).x; 
-	v1.y=vertices.at(triangle.p2).y-vertices.at(triangle.p1).y; 
-	v1.z=vertices.at(triangle.p2).z-vertices.at(triangle.p1).z;
-
-	v2.x=vertices.at(triangle.p3).x-vertices.at(triangle.p1).x; 
-	v2.y=vertices.at(triangle.p3).y-vertices.at(triangle.p1).y; 
-	v2.z=vertices.at(triangle.p3).z-vertices.at(triangle.p1).z;
-
-	Point normal;
-
-	normal.x = v1.y*v2.z - v1.z*v2.y;		
-	normal.y = -v1.x*v2.z + v2.x*v1.z;
-	normal.z = v1.x*v2.y - v2.x*v1.y;
-
-	float dist1 = sqrt( pow(v1.x,2) + pow(v1.y,2) + pow(v1.z,2));
-	float dist2 = sqrt( pow(v2.x,2) + pow(v2.y,2) + pow(v2.z,2));
-	float dist = dist1*dist2;
-
-	normal.x = normal.x/dist;
-	normal.y = normal.y/dist;
-	normal.z = normal.z/dist;
-
-	return normal;
-}
-
 int loadTexture(const char *filename)
 {
 	/* load an image file directly as a new OpenGL texture */
@@ -232,43 +233,24 @@ int loadTexture(const char *filename)
 
 void drawBackground()
 {
-	////load background texture with snowman
-	//if (backgroundTexture1==NULL){
-	//backgroundTexture1 = loadTexture("images/snowman.png");
-	//}
-	//
-	//// draw background
-	//glEnable(GL_TEXTURE_2D);
-	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-	//glBindTexture(GL_TEXTURE_2D, backgroundTexture1);
-
-	//glBegin(GL_QUADS);		
-	//	glTexCoord2f(1.0, 0.0); glVertex3f( 150, 60, -200);
-	//	glTexCoord2f(0.0, 0.0); glVertex3f( 200, 60, -200);
-	//	glTexCoord2f(0.0, 1.0); glVertex3f( 200, 100, -200);
-	//	glTexCoord2f(1.0, 1.0); glVertex3f( 150, 100, -200);
-	//glEnd();
-
-	//glDisable(GL_TEXTURE_2D);
-
-	//load background texture with rainbow
-	if (backgroundTexture2==NULL){
-	backgroundTexture2 = loadTexture("images/rainbow.png");
+	//load background texture happy_new_year
+	if (backgroundTexture1==NULL){
+	backgroundTexture1 = loadTexture("images/happy_new_year3.png");
 	}
 	
-	//// draw background with rainbow
-	//glEnable(GL_TEXTURE_2D);
-	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-	//glBindTexture(GL_TEXTURE_2D, backgroundTexture2);
+	// draw background
+	glEnable(GL_TEXTURE_2D);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+	glBindTexture(GL_TEXTURE_2D, backgroundTexture1);
 
-	//glBegin(GL_QUADS);		
-	//	glTexCoord2f(1.0, 0.0); glVertex3f( -250, -200, -300);
-	//	glTexCoord2f(0.0, 0.0); glVertex3f( 250, -200, -300);
-	//	glTexCoord2f(0.0, 1.0); glVertex3f( 250, 100, -300);
-	//	glTexCoord2f(1.0, 1.0); glVertex3f( -250, 100, -300);
-	//glEnd();
+	glBegin(GL_QUADS);		
+		glTexCoord2f(1.0, 0.0); glVertex3f( -200, -60, -300);
+		glTexCoord2f(0.0, 0.0); glVertex3f( 200, -60, -300);
+		glTexCoord2f(0.0, 1.0); glVertex3f( 200, 150, -300);
+		glTexCoord2f(1.0, 1.0); glVertex3f( -200, 150, -300);
+	glEnd();
 
-	//glDisable(GL_TEXTURE_2D);
+	glDisable(GL_TEXTURE_2D);
 }
 
 void drawFloor()
@@ -300,8 +282,8 @@ void Keyboard(unsigned char key,int x,int y)
 		case 't': 
 		{
 			if (obj_file=="objects/unicorn_low.obj"){
-				horseTexture = loadTexture("images/horse3.png");
-				hornTexture = loadTexture("images/horn2.png");
+				horseTexture = loadTexture("images/horse1.png");
+				hornTexture = loadTexture("images/horn3.png");
 			}
 			else if (obj_file=="objects/hand.obj") handTexture = loadTexture("images/hand1.png");
 			break;
@@ -473,39 +455,6 @@ void Motion(int x, int y)
 
 void Idle()
 {
-	if (light1_state == true || light2_state == true ) 
-	{
-		//if (light_angle<360) light_angle+=4;
-		//else light_angle=0.0; 
-
-		//light1_x = 20*cos(light_angle*3.14/180);
-		//light1_z = 20*sin(light_angle*3.14/180);	
-
-		//light2_x = -20*cos(light_angle*3.14/180);
-		//light2_z = -20*sin(light_angle*3.14/180);
-
-		/*GLfloat light_position1[] = { light1_x, light1_y, light1_z, 1.0 };
-		GLfloat light_position2[] = { light2_x, light2_y, light2_z, 1.0 };*/
-		GLfloat light_position1[] = { -4, 5, -8, 1.0 };
-		GLfloat light_position2[] = { -4, 5, 8, 1.0 };
-
-		glLightfv( GL_LIGHT1, GL_POSITION, light_position1);
-		glLightfv( GL_LIGHT2, GL_POSITION, light_position2);
-
-		GLfloat specularLight1[] = { 0.5, 1.0, 0.0, 1.0 };
-		GLfloat specularLight2[] = { 1.0, 0.0, 0.0, 1.0 };
-
-		glLightfv( GL_LIGHT1, GL_SPECULAR, specularLight1 );
-		glLightfv( GL_LIGHT2, GL_SPECULAR, specularLight2 );
-
-		if (light1_state==true) glEnable(GL_LIGHT1);
-		else if (light1_state==false) glDisable(GL_LIGHT1);
-
-		if (light2_state==true) glEnable(GL_LIGHT2);
-		else if (light2_state==false) glDisable(GL_LIGHT2);
-	}
-	else if (light1_state==false && light2_state==false ) glDisable(GL_LIGHT1), glDisable(GL_LIGHT2);
-
 	glutPostRedisplay();
 }
 
@@ -527,36 +476,33 @@ void MenuSelect(int choice)
 
 void lightSources()
 {
-	if (light1_state==true) glDisable(GL_LIGHT1);
-	else if (light1_state==false){
-		GLfloat light_position1[] = { -4, 5, -8, 1.0 };
+	if (light1_state==false) glDisable(GL_LIGHT1);
+	else if (light1_state==true){
+		GLfloat light_position1[] = { -10,5,-4, 1.0 };
 		GLfloat specularLight1[] = { 0.5, 1.0, 0.0, 1.0 };
-		GLfloat spotDir1[] = {0.0, -2.0, 0.0};
-
-		glLightf(GL_LIGHT1,GL_SPOT_CUTOFF,20.0);
-		glLightf(GL_LIGHT1,GL_SPOT_EXPONENT,90.0);
-		glLightfv(GL_LIGHT1,GL_SPOT_DIRECTION,spotDir1);
+		//GLfloat spotDir1[] = {0.0, 0.0, 0.0, 1.0};
 
 		glLightfv( GL_LIGHT1, GL_POSITION, light_position1);		
 		glLightfv( GL_LIGHT1, GL_SPECULAR, specularLight1 );
+
+		//glLightf(GL_LIGHT1,GL_SPOT_CUTOFF,90.0);
+		//glLightf(GL_LIGHT1,GL_SPOT_EXPONENT,128.0f);
+		//glLightfv(GL_LIGHT1,GL_SPOT_DIRECTION,spotDir1);
+		
 		glEnable(GL_LIGHT1);
 	}
 
-	if (light2_state==true) glDisable(GL_LIGHT2);
-	else if (light2_state==false){
-		GLfloat light_position2[] = { -4, 5, 8, 1.0 };
+	if (light2_state==false) glDisable(GL_LIGHT2);
+	else if (light2_state==true){
+		GLfloat light_position2[] = { -10,5,4, 1.0 };
 		GLfloat specularLight2[] = { 1.0, 0.2, 0.1, 1.0 };
-		GLfloat spotDir2[] = {0.0, -2.0, 0.0};
-
-		glLightf(GL_LIGHT2,GL_SPOT_CUTOFF,20.0);
-		glLightf(GL_LIGHT2,GL_SPOT_EXPONENT,90.0);
-		glLightfv(GL_LIGHT2,GL_SPOT_DIRECTION,spotDir2);
+		//GLfloat spotDir2[] = {0.0, 0.0, 0.0};
 
 		glLightfv( GL_LIGHT2, GL_POSITION, light_position2);
 		glLightfv( GL_LIGHT2, GL_SPECULAR, specularLight2 );
+	
 		glEnable(GL_LIGHT2);
 	}
-
 }
 
 void Setup()  // TOUCH IT !! 
@@ -571,13 +517,15 @@ void Setup()  // TOUCH IT !!
 	glClearDepth(1);
       
 	//Set up light source
-	GLfloat light_position[] = { 20.0, 0.0, 0.0, 1.0 };
-	GLfloat ambientLight[] = { 0.6f, 0.6f, 0.6f, 1.0 };
+	GLfloat light_position[] = { 0.0, 20.0, 10.0, 1.0 };
+	GLfloat specularLight[] = { 1.0f, 1.0f, 1.0f, 1.0 };
+	GLfloat ambientLight[] = { 0.3f, 0.3f, 0.3f, 1.0 };
 	GLfloat diffuseLight[] = { 0.8f, 0.8f, 0.8f, 1.0 };
-	
+
 	glLightfv( GL_LIGHT0, GL_POSITION, light_position);
 	glLightfv( GL_LIGHT0, GL_AMBIENT, ambientLight );
 	glLightfv( GL_LIGHT0, GL_DIFFUSE, diffuseLight );
+	glLightfv( GL_LIGHT0, GL_SPECULAR, specularLight );
 	
 	glEnable(GL_LIGHT0);
 

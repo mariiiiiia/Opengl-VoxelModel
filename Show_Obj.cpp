@@ -23,7 +23,7 @@ void showObj(std::vector<Point> &vert, std::vector<Triangle> &tr, bool solid,boo
 		for (int i=0; i<tr.size(); i++)								
 		{
 			if (texture!= NULL){				// body texture
-				glColor4f(0.5,0.5,0.6,1.0);
+				//glColor4f(0.5,0.5,0.6,1.0);
 
 				spheric_coord1 = sphericCoord(vert.at(tr.at(i).p1));
 				theta1 = spheric_coord1.y; phi1 = spheric_coord1.z;

@@ -68,7 +68,7 @@ void loadObj(std::string filename, std::vector<Point> &vertices, std::vector<Tri
 			}
 
 			if (obj_file=="objects/unicorn_low.obj"){
-				if ( vertices.at(tr.p1).z<-4.07 && vertices.at(tr.p2).z<-4.07 && vertices.at(tr.p3).z<-4.07 && vertices.at(tr.p1).y>2.9 && vertices.at(tr.p2).y>2.9 && vertices.at(tr.p3).y>2.9){
+				if ( vertices.at(tr.p1).z<-4.0 && vertices.at(tr.p2).z<-4.0 && vertices.at(tr.p3).z<-4.0 && vertices.at(tr.p1).y>2.9 && vertices.at(tr.p2).y>2.9 && vertices.at(tr.p3).y>2.9){
 					hornTriangles.push_back(tr);}
 				else triangles.push_back(tr);
 			}
@@ -82,16 +82,16 @@ void loadObj(std::string filename, std::vector<Point> &vertices, std::vector<Tri
 }
 
 
-bool ccw_or_cw(Point p1, Point p2, Point p3)
-{
-	bool ccw; 
-
-	float cross_prod_p1_p2 = (p1.y*p2.z-p1.z*p2.y)-(p1.x*p2.z-p1.z*p2.x)+(p1.x*p2.y-p1.y*p2.x);
-	float cross_prod_p2_p3 = (p2.y*p3.z-p2.z*p3.y)-(p2.x*p3.z-p2.z*p3.x)+(p2.x*p3.y-p2.y*p3.x);
-	float cross_prod_p3_p1 = (p3.y*p1.z-p3.z*p1.y)-(p3.x*p1.z-p3.z*p1.x)+(p3.x*p1.y-p3.y*p1.x);
-
-	if (cross_prod_p1_p2+cross_prod_p2_p3+cross_prod_p3_p1 >0) ccw= false;
-	else ccw = true;
-
-	return ccw;
-}
+//bool ccw_or_cw(Point p1, Point p2, Point p3)
+//{
+//	bool ccw; 
+//
+//	float cross_prod_p1_p2 = (p1.y*p2.z-p1.z*p2.y)-(p1.x*p2.z-p1.z*p2.x)+(p1.x*p2.y-p1.y*p2.x);
+//	float cross_prod_p2_p3 = (p2.y*p3.z-p2.z*p3.y)-(p2.x*p3.z-p2.z*p3.x)+(p2.x*p3.y-p2.y*p3.x);
+//	float cross_prod_p3_p1 = (p3.y*p1.z-p3.z*p1.y)-(p3.x*p1.z-p3.z*p1.x)+(p3.x*p1.y-p3.y*p1.x);
+//
+//	if (cross_prod_p1_p2+cross_prod_p2_p3+cross_prod_p3_p1 >0) ccw= false;
+//	else ccw = true;
+//
+//	return ccw;
+//}
