@@ -11,7 +11,7 @@
 #include "Show_Obj.h"
 
 
-void showObj(std::vector<Point> &vert, std::vector<Triangle> &tr, bool solid,bool wireframe, std::vector<Point> normal, int texture)
+void showObj(const std::vector<Point> &vert,const std::vector<Triangle> &tr, bool solid,bool wireframe, const std::vector<Point> vertNormal, int texture)
 {
 	// variables for spherical transformations - for the body
 	Point spheric_coord1;
@@ -82,11 +82,11 @@ void showObj(std::vector<Point> &vert, std::vector<Triangle> &tr, bool solid,boo
 		for (int i=0; i<tr.size(); i++)
 		{
 			glBegin(GL_LINES);
-				glNormal3f(normal.at(i).x, normal.at(i).y, normal.at(i).z);
+				glNormal3f(vertNormal.at(tr.at(i).p1).x, vertNormal.at(tr.at(i).p1).y, vertNormal.at(tr.at(i).p1).z);
 				glVertex3f( vert.at(tr.at(i).p1).x, vert.at(tr.at(i).p1).y, vert.at(tr.at(i).p1).z);
-				glNormal3f(normal.at(i).x, normal.at(i).y, normal.at(i).z);
+				glNormal3f(vertNormal.at(tr.at(i).p2).x, vertNormal.at(tr.at(i).p2).y, vertNormal.at(tr.at(i).p2).z);
 				glVertex3f( vert.at(tr.at(i).p2).x, vert.at(tr.at(i).p2).y, vert.at(tr.at(i).p2).z);
-				glNormal3f(normal.at(i).x, normal.at(i).y, normal.at(i).z);
+				glNormal3f(vertNormal.at(tr.at(i).p2).x, vertNormal.at(tr.at(i).p2).y, vertNormal.at(tr.at(i).p2).z);
 				glVertex3f( vert.at(tr.at(i).p3).x, vert.at(tr.at(i).p3).y, vert.at(tr.at(i).p3).z);
 			glEnd();
 		}

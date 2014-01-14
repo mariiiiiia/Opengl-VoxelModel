@@ -11,6 +11,7 @@
 #include "Load_obj.h"
 #include "Show_Obj.h"
 #include "soil/SOIL.h"
+#include "voxelModel.h"
  
 
 
@@ -31,14 +32,18 @@ static bool light1_state = false, light2_state = false;
 float light1_x=0, light1_y=-1, light1_z=0,light2_x=0, light2_y=-1, light2_z=0;
 float light_angle=0.03;
 
-// normals
+//------ normals -------------
 std::vector<Point> normal;      // normal per face
 std::vector<Point> vertNormal;  // normal per vertice
 
-// ----------TEXTURES ------------------
+//---------- TEXTURES ------------------
 static int horseTexture, hornTexture, handTexture, floorTexture;
 static int backgroundTexture1, backgroundTexture2;
 
+//---------- load object ------
+static bool load_obj = true;
+
+static bool voxelize=false;
 
 void Render()
 {    
@@ -49,7 +54,8 @@ void Render()
   glLoadIdentity();
   
   //----- select which object will be loaded and calculate its normals-------
-  if (obj_file == "objects/unicorn_low.obj"){
+ // if (obj_file == "objects/unicorn_low.obj" && load_obj==true){
+  if (load_obj==true){
 	  loadObj(obj_file, vertices, triangles, hornTriangles);
 	  
 	  normal.clear();
@@ -62,75 +68,100 @@ void Render()
 	  }
 
 	  avgNormals(triangles, vertices);
+	  load_obj=false;
   }
-  else if (obj_file == "objects/hand.obj"){
-	  loadObj(obj_file, vertices, triangles, hornTriangles);
+  //else if (obj_file == "objects/hand.obj" && load_obj==true){
+	 // loadObj(obj_file, vertices, triangles, hornTriangles);
 
-	  normal.clear();
-	  for (int i=0; i<triangles.size(); i++)
-	  {
-		  Point n;
+	 // normal.clear();
+	 // for (int i=0; i<triangles.size(); i++)
+	 // {
+		//  Point n;
 
-		  n = CalcNormal( triangles.at(i));
-		  normal.push_back(n);
-	  }
-	  avgNormals(triangles, vertices);
-  }
+		//  n = CalcNormal( triangles.at(i));
+		//  normal.push_back(n);
+	 // }
+	 // avgNormals(triangles, vertices);
+	 // load_obj=false;
+  //}
 
   //-------draw background------
-  drawBackground();
-  drawFloor();
+  //drawBackground();
+  //drawFloor();
 
 
   //---- bring object at the center of the window so we can see it -----------
   if (obj_file=="objects/unicorn_low.obj"){
 	  glTranslatef(0,0,-15);
-	  glRotatef(90,0,1,0);
+	  //glRotatef(90,0,1,0);
   }
-  else if (obj_file=="objects/hand.obj"){
+  else if (obj_file=="objects/hand.obj" || obj_file=="objects/3D_1"){
 	  glTranslatef(0,0,-50);
-	  glRotatef(0,0,1,0);
+	  //glRotatef(-90,0,1,0);
   }
   //---------------------------------------------------------
 
   //---------- render object ----------------
   glPushMatrix();
-	  glTranslatef(tx,ty,tz);
+	  if (voxelize==false){
+		  glTranslatef(tx,ty,tz);
 
-	  glRotatef(rotx,1,0,0);
-	  glRotatef(roty,0,1,0);
-	  glRotatef(rotz,0,0,1);
+		  glRotatef(rotx,1,0,0);
+		  glRotatef(roty,0,1,0);
+		  glRotatef(rotz,0,0,1);
 
-	  glScalef( scalex, scaley, scalez);
+		  glScalef( scalex, scaley, scalez);
 
-	  if (obj_file=="objects/unicorn_low.obj"){
-		  glColor4f(0.5,0.5,0.6,1.0);
-		  glMateriali(GL_FRONT,GL_SHININESS,50);
-		  showObj(vertices, triangles, solid, wireframe, normal, horseTexture);
-		  glColor4f(1,1,1,1.0);
-		  glMateriali(GL_FRONT,GL_SHININESS,128);
-		  showObj(vertices, hornTriangles, solid, wireframe, normal, hornTexture);
-	  }
-	  else if (obj_file=="objects/hand.obj"){
-		  glMateriali(GL_FRONT,GL_SHININESS,30);
-		  showObj(vertices, triangles, solid, wireframe, normal, handTexture);
+		  if (obj_file=="objects/unicorn_low.obj"){
+			  glColor4f(1,1,1,1.0);
+			  glMateriali(GL_FRONT,GL_SHININESS,50);
+			  showObj(vertices, triangles, solid, wireframe, vertNormal, horseTexture);
+			  glColor4f(1,1,1,1.0);
+			  glMateriali(GL_FRONT,GL_SHININESS,128);
+			  showObj(vertices, hornTriangles, solid, wireframe, vertNormal, hornTexture);
+		  }
+		  else if (obj_file=="objects/hand.obj"){
+			  glColor4f(1,1,1,1.0);
+			  glMateriali(GL_FRONT,GL_SHININESS,60);
+			  showObj(vertices, triangles, solid, wireframe, vertNormal, handTexture);
+		  }
+		  else {
+			  glColor4f(1,1,1,1.0);
+			  showObj(vertices, triangles, solid, wireframe, vertNormal, handTexture);		  
+		  }
 	  }
   glPopMatrix();
 
-	   // draw spheres for light
+  // draw spheres for light
   if (light1_state==true){
 	  glPushMatrix();
 		  glColor3f( 0.1, 0.8, 0.0);
-		  glTranslatef(-4,5,-8);
+		  glTranslatef(-8,5,4);
 		  glutSolidSphere(0.5,20,20);
 	  glPopMatrix();}
 
   if (light2_state==true){
 	  glPushMatrix();
 		  glColor3f( 1.0, 0.0, 0.0);
-		  glTranslatef(-4,5,8);
+		  glTranslatef(8,5,4);
 		  glutSolidSphere(0.5,20,20);
 	  glPopMatrix();}
+
+  //-------- VOXELIZE ---------
+  glPushMatrix();
+	  if (voxelize==true){
+		  glTranslatef(tx,ty,tz);
+
+		  glRotatef(rotx,1,0,0);
+		  glRotatef(roty,0,1,0);
+		  glRotatef(rotz,0,0,1);
+
+		  glScalef( scalex, scaley, scalez);
+
+		  voxelModel( vertices, triangles, normal);
+	  }
+  glPopMatrix();
+
 
   glutSwapBuffers();             // All drawing commands applied to the 
                                  // hidden buffer, so now, bring forward
@@ -282,7 +313,7 @@ void Keyboard(unsigned char key,int x,int y)
 		case 't': 
 		{
 			if (obj_file=="objects/unicorn_low.obj"){
-				horseTexture = loadTexture("images/horse1.png");
+				horseTexture = loadTexture("images/horse3.png");
 				hornTexture = loadTexture("images/horn3.png");
 			}
 			else if (obj_file=="objects/hand.obj") handTexture = loadTexture("images/hand1.png");
@@ -332,8 +363,13 @@ void Keyboard(unsigned char key,int x,int y)
 			scalez_state=true, scaley_state=false, scalex_state=false;
 			break;
 		//----------- select object to render -----------------------
-		case '1': obj_file = "objects/unicorn_low.obj"; break;
-		case '2': obj_file = "objects/hand.obj"; break;
+		case '1': {obj_file = "objects/unicorn_low.obj"; load_obj=true; break;}
+		case '2': {obj_file = "objects/hand.obj"; load_obj=true; break;}
+		case '3': {obj_file = "objects/3D_1.obj"; load_obj=true; break;}
+		case '4': {obj_file = "objects/3D_2.obj"; load_obj=true; break;}
+		//------------ voxelize odr not -------------
+		case 'd': {voxelize = true; break;}
+		case 'e': {voxelize = false; break;}
 		default : break;
 		}	
 
@@ -478,7 +514,7 @@ void lightSources()
 {
 	if (light1_state==false) glDisable(GL_LIGHT1);
 	else if (light1_state==true){
-		GLfloat light_position1[] = { -10,5,-4, 1.0 };
+		GLfloat light_position1[] = { -8,5, 4, 1.0 };
 		GLfloat specularLight1[] = { 0.5, 1.0, 0.0, 1.0 };
 		//GLfloat spotDir1[] = {0.0, 0.0, 0.0, 1.0};
 
@@ -494,7 +530,7 @@ void lightSources()
 
 	if (light2_state==false) glDisable(GL_LIGHT2);
 	else if (light2_state==true){
-		GLfloat light_position2[] = { -10,5,4, 1.0 };
+		GLfloat light_position2[] = { 8,5,4, 1.0 };
 		GLfloat specularLight2[] = { 1.0, 0.2, 0.1, 1.0 };
 		//GLfloat spotDir2[] = {0.0, 0.0, 0.0};
 
@@ -517,7 +553,7 @@ void Setup()  // TOUCH IT !!
 	glClearDepth(1);
       
 	//Set up light source
-	GLfloat light_position[] = { 0.0, 20.0, 10.0, 1.0 };
+	GLfloat light_position[] = { 0.0, 20.0, 8.0, 1.0 };
 	GLfloat specularLight[] = { 1.0f, 1.0f, 1.0f, 1.0 };
 	GLfloat ambientLight[] = { 0.3f, 0.3f, 0.3f, 1.0 };
 	GLfloat diffuseLight[] = { 0.8f, 0.8f, 0.8f, 1.0 };

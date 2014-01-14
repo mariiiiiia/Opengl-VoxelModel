@@ -2,7 +2,6 @@
 #include <string>
 #include <array>
 #include <vector>
-#include <array>
 #include <math.h>
 #include "gl/glut.h"   // - An interface and windows 
                        //   management library
@@ -29,6 +28,8 @@ void loadObj(std::string filename, std::vector<Point> &vertices, std::vector<Tri
 	vertices.clear();
 	hornTriangles.clear();
 
+	float cnt=0, avg=0;
+
     if (!(objfile = fopen(filename.c_str(), "rt"))) return;
 
     while (fgets(line, 128, objfile)) {
@@ -38,16 +39,15 @@ void loadObj(std::string filename, std::vector<Point> &vertices, std::vector<Tri
             sscanf(&line[1],"%f %f %f", &v.x, &v.y, &v.z);
 
             vertices.push_back(v);
+
+			cnt++;
+			avg+= v.x;
             break;
 		// create an array with the triangles
         case 'f':
 			sscanf(&line[1],"%d%d%d", &f1, &f2, &f3);
 
 			int temp1,temp2,temp3;			
-			//temp1=vertices.at(--f1);
-			//temp2=vertices.at(--f2);
-			//temp3=vertices.at(--f3);
-
 			temp1=f1-1;				
 			temp2=f2-1;
 			temp3=f3-1;
@@ -79,6 +79,8 @@ void loadObj(std::string filename, std::vector<Point> &vertices, std::vector<Tri
         };
     }
     fclose(objfile);
+	avg = avg/cnt;
+	printf("avg=%f\n", avg);
 }
 
 

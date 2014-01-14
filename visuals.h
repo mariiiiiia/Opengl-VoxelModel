@@ -3,12 +3,42 @@
 #define LIGHT1_ON_OFF 3
 #define LIGHT2_ON_OFF 4
 
-
 class Point{
 	public:
 		float x;
 		float y;
 		float z;
+	
+	bool equals( Point p){
+		if (this->x==p.x && this->y==p.y && this->z==p.z) return true;
+		else return false;
+	}
+
+	void insert(float x, float y, float z){
+		this->x=x;
+		this->y=y;
+		this->z=z;
+	}
+
+	Point dotproduct(Point p){
+		Point p1;
+		p1.x= this->x * p.x;
+		p1.y= this->y * p.y;
+		p1.z= this->z * p.z;
+		
+		return p1;
+	}
+
+	bool comparisonGreater(Point p){
+		if (this->x>=p.x && this->y>=p.y && this->z>=p.z) return true;
+		else return false;
+	}
+	
+	bool comparisonLower(Point p){
+		if (this->x<=p.x && this->y<=p.y && this->z<=p.z) return true;
+		else return false;
+	}
+
 };
 
 class Triangle {
@@ -23,7 +53,6 @@ extern std::vector<Triangle> triangles;
 extern std::vector<Triangle> hornTriangles;
 
 extern std::string obj_file;
-//static std::string obj_file;
 
 //-------- Functions --------------------------------
 
