@@ -8,5 +8,9 @@ u: undo putting texture
 1: render object '1' 
 2: render object '2'
 3: render object '3'
+4: render object '4'
 
 right-click inside the window and select your menu choices
+
+d: voxel model
+e: undo voxelization
