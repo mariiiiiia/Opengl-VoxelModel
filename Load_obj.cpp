@@ -80,7 +80,8 @@ void loadObj(std::string filename, std::vector<Point> &vertices, std::vector<Tri
     }
     fclose(objfile);
 	avg = avg/cnt;
-	printf("avg=%f\n", avg);
+	//printf("avg=%f\n", avg);
+	//printf("triangles size: %d\n", triangles.size());
 }
 
 

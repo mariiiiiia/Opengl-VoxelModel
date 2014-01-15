@@ -70,20 +70,6 @@ void Render()
 	  avgNormals(triangles, vertices);
 	  load_obj=false;
   }
-  //else if (obj_file == "objects/hand.obj" && load_obj==true){
-	 // loadObj(obj_file, vertices, triangles, hornTriangles);
-
-	 // normal.clear();
-	 // for (int i=0; i<triangles.size(); i++)
-	 // {
-		//  Point n;
-
-		//  n = CalcNormal( triangles.at(i));
-		//  normal.push_back(n);
-	 // }
-	 // avgNormals(triangles, vertices);
-	 // load_obj=false;
-  //}
 
   //-------draw background------
   //drawBackground();

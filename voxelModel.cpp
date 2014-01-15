@@ -13,11 +13,14 @@ std::vector<Point> voxels;
 Point cp1,cp2,cp3,cp4,cp5,cp6,cp7,cp8;  // points that define the bounding box, where i search for the voxels that should be drawn
 float width_x, width_y, width_z;        // widths of bounding box
 
-float d=0.1;		// voxel width
+float d=0.2;		// voxel width
+
+//int w=0, b=1;
 
 void voxelModel(const std::vector<Point> &vert,const std::vector<Triangle> &tr, const std::vector<Point> &normal){
 	float x,y,z;
 
+	voxels.clear();
 	//glColor4f( 1,0,0.5, 1.0);
 	//for (int k=0; k<1; k++){
 	for (int k=0; k<tr.size(); k++){
@@ -27,8 +30,8 @@ void voxelModel(const std::vector<Point> &vert,const std::vector<Triangle> &tr, 
 
 		//Point p1,p2,p3;
 		//p1.insert( 0,1,0);
-		//p2.insert( 0, 2,0);
-		//p3.insert( 0.3,1.5,0.8);
+		//p2.insert( 0, 3,0);
+		//p3.insert( 0.3,1.5,1.8);
 
 		//glBegin( GL_TRIANGLES);
 		//glVertex3f( p1.x,p1.y,p1.z); glVertex3f( p2.x,p2.y,p2.z); glVertex3f(p3.x, p3.y,p3.z);
@@ -40,12 +43,27 @@ void voxelModel(const std::vector<Point> &vert,const std::vector<Triangle> &tr, 
 		//norm.insert(0,0,1);
 		triangleVoxelization(p1,p2,p3, normal.at(k));
 
+		//printf( "voxel array size: %d\n", voxels.size());
+
 	}			
 }
 
-void drawVoxel( float x, float y, float z){
+void drawVoxel( Point p){
+	voxels.push_back( p);
 
-	glColor3f(0,0,1);
+	float x=p.x, y=p.y, z=p.z;
+
+	glColor3f(0.2,0.2,1);
+	
+	glBegin(GL_POINTS);
+	glVertex3f( x+d/2, y+d/2, z-d/2);
+	glEnd();
+
+
+	//if (b==1) {glColor4f(1,1,1, 0.5); b=0;w=1;}
+	//else if (w==1) {glColor4f(0,1.0,0, 0.5); b=1;w=0;}
+	glColor4f(1,1,1, 0.5);
+	
 
 	glBegin(GL_QUADS);
 		glVertex3f( x, y, z-d);
@@ -86,14 +104,14 @@ void drawVoxel( float x, float y, float z){
 }
 
 void placeVoxel( Point p1, Point vp){
-	if (p1.x>=0 && p1.y>=0 && p1.z>=0) drawVoxel( vp.x, vp.y, vp.z);
-	else if (p1.x>=0 && p1.y>=0 && p1.z<0) drawVoxel( vp.x, vp.y,-vp.z);
-	else if (p1.x>=0 && p1.y<0 && p1.z>=0) drawVoxel(vp.x,-vp.y,vp.z);
-	else if (p1.x<0 && p1.y>=0 && p1.z>=0) drawVoxel(-vp.x,vp.y,vp.z);
+	if (p1.x>=0 && p1.y>=0 && p1.z>=0) drawVoxel( vp);
+	//else if (p1.x>=0 && p1.y>=0 && p1.z<0) drawVoxel( vp.x, vp.y,-vp.z);
+	//else if (p1.x>=0 && p1.y<0 && p1.z>=0) drawVoxel(vp.x,-vp.y,vp.z);
+	/*else if (p1.x<0 && p1.y>=0 && p1.z>=0) drawVoxel(-vp.x,vp.y,vp.z);
 	else if (p1.x>=0 && p1.y<0 && p1.z<0) drawVoxel(vp.x,-vp.y,-vp.z);
 	else if (p1.x<0 && p1.y<0 && p1.z>=0) drawVoxel(-vp.x,-vp.y,vp.z);
 	else if (p1.x<0 && p1.y>=0 && p1.z<0) drawVoxel(-vp.x,vp.y,-vp.z);
-	else if (p1.x<0 && p1.y<0 && p1.z<0) drawVoxel(-vp.x,-vp.y,-vp.z);
+	else if (p1.x<0 && p1.y<0 && p1.z<0) drawVoxel(-vp.x,-vp.y,-vp.z);*/
 }
 
 void boundingBoxOfTriangle( Point tp1, Point tp2, Point tp3){
@@ -152,94 +170,65 @@ void triangleVoxelization( Point tp1, Point tp2, Point tp3, Point normal){
 	// if these dot products have the same sign, then this cube is not a voxel because it is above or below the triangle 
 	// otherwise, it's upon the triangle so it should be rendered
 
-	Point p;   // this is the point (xmin,ymin,zmin) of every potential-voxel that is being checked
-	int cnt=0;
-
+	Point p;   // this is the point (xmin,ymin,zmax) of every potential-voxel that is being checked
+	float dotpr1,dotpr2,dotpr3,dotpr4,dotpr5,dotpr6,dotpr7,dotpr8; // dot products 
+	Point ap1,ap2,ap3,ap4,ap5,ap6,ap7,ap8;		// vectors from triangle point to the cube points that have to be checked if they're above or below the triangle
+	Point cp;   // the point (xmin,ymin,zmax) of the voxel 
+	
 	for (float i=0; i<=(int(width_x/d)); i++){
 		for (float j=0; j<=(int(width_y/d)); j++){
 			for (float k=0; k<=(int(width_z/d)); k++){	
 
 				p.insert( cp1.x+i*d, cp1.y+j*d, cp1.z-k*d);
-				Point ap1, dotpr1;						
 				ap1.insert( tp1.x-p.x, tp1.y-p.y, tp1.z-p.z);
 				dotpr1 = ap1.dotproduct( normal);
 
 				p.insert( p.x+d, p.y, p.z);
-				Point ap2, dotpr2;						
 				ap2.insert( tp1.x-p.x, tp1.y-p.y, tp1.z-p.z);
 				dotpr2 = ap2.dotproduct( normal);
 				
 				p.insert( p.x, p.y+d, p.z);
-				Point ap3, dotpr3;						
 				ap3.insert( tp1.x-p.x, tp1.y-p.y, tp1.z-p.z);
 				dotpr3 = ap3.dotproduct( normal);
 				
 				p.insert( p.x-d, p.y, p.z);
-				Point ap4, dotpr4;						
 				ap4.insert( tp1.x-p.x, tp1.y-p.y, tp1.z-p.z);
 				dotpr4 = ap4.dotproduct( normal);
 
 				p.insert( p.x, p.y-d, p.z-d);
-				Point ap5, dotpr5;						
 				ap5.insert( tp1.x-p.x, tp1.y-p.y, tp1.z-p.z);
 				dotpr5 = ap5.dotproduct( normal);
 
 				p.insert( p.x+d, p.y, p.z);
-				Point ap6, dotpr6;						
 				ap6.insert( tp1.x-p.x, tp1.y-p.y, tp1.z-p.z);
 				dotpr6 = ap6.dotproduct( normal);
 
 				p.insert( p.x, p.y+d, p.z);
-				Point ap7, dotpr7;						
 				ap7.insert( tp1.x-p.x, tp1.y-p.y, tp1.z-p.z);
 				dotpr7 = ap7.dotproduct( normal);
 
 				p.insert( p.x-d, p.y, p.z);
-				Point ap8, dotpr8;						
 				ap8.insert( tp1.x-p.x, tp1.y-p.y, tp1.z-p.z);
-				dotpr8 = ap8.dotproduct( normal);
-				
-				//printf("dotproducts: %f %f %f %f %f %f %f %f \n", dotpr1,dotpr2,dotpr3,dotpr4,dotpr5,dotpr6,dotpr7,dotpr8 );
-			
-				cnt++;
+				dotpr8 = ap8.dotproduct( normal);			
 
-				Point zero, pos, neg;
-				zero.insert(0,0,0);
-				pos.insert(1,1,1);
-				neg.insert(-1,-1,-1);
-				if (  !((pos.dotproduct(dotpr1)).comparisonGreater( zero) &&
-						(pos.dotproduct(dotpr2)).comparisonGreater( zero) &&
-						(pos.dotproduct(dotpr3)).comparisonGreater( zero) && 
-						(pos.dotproduct(dotpr4)).comparisonGreater( zero) && 
-						(pos.dotproduct(dotpr5)).comparisonGreater( zero) && 
-						(pos.dotproduct(dotpr6)).comparisonGreater( zero) && 
-						(pos.dotproduct(dotpr7)).comparisonGreater( zero) && 
-						(pos.dotproduct(dotpr8)).comparisonGreater( zero))   
-					&&
-					  !((neg.dotproduct(dotpr1)).comparisonLower( zero) &&
-						(neg.dotproduct(dotpr2)).comparisonLower( zero) &&
-						(neg.dotproduct(dotpr3)).comparisonLower( zero) && 
-						(neg.dotproduct(dotpr4)).comparisonLower( zero) && 
-						(neg.dotproduct(dotpr5)).comparisonLower( zero) && 
-						(neg.dotproduct(dotpr6)).comparisonLower( zero) && 
-						(neg.dotproduct(dotpr7)).comparisonLower( zero) && 
-						(neg.dotproduct(dotpr8)).comparisonLower( zero))	) {
+				if (  !(dotpr1>0 && dotpr2>0 && dotpr3>0 && dotpr4>0 && dotpr5>0 && dotpr6>0 && dotpr7>0 && dotpr8>0) &&
+					  !(dotpr1<0 && dotpr2<0 && dotpr3<0 && dotpr4<0 && dotpr5<0 && dotpr6<0 && dotpr7<0 && dotpr8<0) ){
+						/*	printf("no voxel\n");}
+				else {*/
 					//printf("voxel\n");
-					cnt--;
 
 					//Point vp;				
 					//vp.insert( int(abs((cp1.x+i*d)/d)), int(abs((cp1.y+j*d)/d)), int(abs((cp1.z-k*d)/d)) );		//voxel distance from (0,0,0) to my point 
 					//vp.insert( vp.x*d, vp.y*d, vp.z*d);  // real distance of each voxel
 					
-					Point cp;
 					cp.insert( cp1.x+i*d, cp1.y+j*d, cp1.z-k*d);
 
-					drawVoxel(cp.x, cp.y, cp.z);
+					drawVoxel(cp);
+					//placeVoxel( cp, cp);
 				}
 			}
 		}
 	}
-	//printf("cnt=%d\n",cnt);
 }
 
 //void barycentricCoord( Point p1, Point p2, Point p3, Point p){

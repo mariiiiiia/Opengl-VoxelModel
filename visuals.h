@@ -20,22 +20,20 @@ class Point{
 		this->z=z;
 	}
 
-	Point dotproduct(Point p){
-		Point p1;
-		p1.x= this->x * p.x;
-		p1.y= this->y * p.y;
-		p1.z= this->z * p.z;
+	float dotproduct(Point p){
+		float pr;
+		pr = this->x*p.x + this->y*p.y + this->z*p.z;
 		
-		return p1;
+		return pr;
 	}
 
 	bool comparisonGreater(Point p){
-		if (this->x>=p.x && this->y>=p.y && this->z>=p.z) return true;
+		if (this->x>p.x || this->y>p.y || this->z>p.z) return true;
 		else return false;
 	}
 	
 	bool comparisonLower(Point p){
-		if (this->x<=p.x && this->y<=p.y && this->z<=p.z) return true;
+		if (this->x<p.x && this->y<p.y && this->z<p.z) return true;
 		else return false;
 	}
 
