@@ -10,32 +10,32 @@
 
 std::vector<Point> voxels;
 
-Point cp1,cp2,cp3,cp4,cp5,cp6,cp7,cp8;  // points that define the bounding box, where i search for the voxels that should be drawn
+Point bound_box1, bound_box2, bound_box3, bound_box4, bound_box5, bound_box6, bound_box7, bound_box8;  // points that define the bounding box, where i search for the voxels that should be drawn
 float width_x, width_y, width_z;        // widths of bounding box
 
 float d=0.2;		// voxel width
 
-//int w=0, b=1;
+int w=0, b=1;
 
 void voxelModel(const std::vector<Point> &vert,const std::vector<Triangle> &tr, const std::vector<Point> &normal){
 	float x,y,z;
 
 	voxels.clear();
-	//glColor4f( 1,0,0.5, 1.0);
-	//for (int k=0; k<1; k++){
-	for (int k=0; k<tr.size(); k++){
-		Point p1 = vert.at(tr.at(k).p1);
-		Point p2 = vert.at(tr.at(k).p2);
-		Point p3 = vert.at(tr.at(k).p3);
+	glColor4f( 1,0,0.5, 1.0);
+	for (int k=0; k<1; k++){
+		Point p1,p2,p3;
+		p1.insert( 0,1,0);
+		p2.insert( 0, 3,0);
+		p3.insert( 0,1.5,1.8);
 
-		//Point p1,p2,p3;
-		//p1.insert( 0,1,0);
-		//p2.insert( 0, 3,0);
-		//p3.insert( 0.6,1.5,1.8);
+		glBegin( GL_TRIANGLES);
+		glVertex3f( p1.x,p1.y,p1.z); glVertex3f( p2.x,p2.y,p2.z); glVertex3f(p3.x, p3.y,p3.z);
+		glEnd();
 
-		//glBegin( GL_TRIANGLES);
-		//glVertex3f( p1.x,p1.y,p1.z); glVertex3f( p2.x,p2.y,p2.z); glVertex3f(p3.x, p3.y,p3.z);
-		//glEnd();
+	//for (int k=0; k<tr.size(); k++){
+	//	Point p1 = vert.at(tr.at(k).p1);
+	//	Point p2 = vert.at(tr.at(k).p2);
+	//	Point p3 = vert.at(tr.at(k).p3);
 
 		boundingBoxOfTriangle(p1,p2,p3);
 		triangleVoxelization(p1,p2,p3, normal.at(k));
@@ -85,15 +85,15 @@ void drawVoxel( Point p){
 	glEnd();
 	glBegin(GL_QUADS);
 		glVertex3f( x, y+d, z-d);
-		glVertex3f( x+d, y+d, z-d);
-		glVertex3f( x+d, y+d, z);
 		glVertex3f( x, y+d, z);
+		glVertex3f( x+d, y+d, z);
+		glVertex3f( x+d, y+d, z-d);
 	glEnd();
 	glBegin(GL_QUADS);
 		glVertex3f( x, y, z);
-		glVertex3f( x+d, y, z);
-		glVertex3f( x+d, y, z-d);
 		glVertex3f( x, y, z-d);
+		glVertex3f( x+d, y, z-d);
+		glVertex3f( x+d, y, z);
 	glEnd();
 
 	glColor3f(1,0,0);
@@ -136,17 +136,6 @@ void drawVoxel( Point p){
 	glEnd();
 }
 
-void placeVoxel( Point p1, Point vp){
-	if (p1.x>=0 && p1.y>=0 && p1.z>=0) drawVoxel( vp);
-	//else if (p1.x>=0 && p1.y>=0 && p1.z<0) drawVoxel( vp.x, vp.y,-vp.z);
-	//else if (p1.x>=0 && p1.y<0 && p1.z>=0) drawVoxel(vp.x,-vp.y,vp.z);
-	/*else if (p1.x<0 && p1.y>=0 && p1.z>=0) drawVoxel(-vp.x,vp.y,vp.z);
-	else if (p1.x>=0 && p1.y<0 && p1.z<0) drawVoxel(vp.x,-vp.y,-vp.z);
-	else if (p1.x<0 && p1.y<0 && p1.z>=0) drawVoxel(-vp.x,-vp.y,vp.z);
-	else if (p1.x<0 && p1.y>=0 && p1.z<0) drawVoxel(-vp.x,vp.y,-vp.z);
-	else if (p1.x<0 && p1.y<0 && p1.z<0) drawVoxel(-vp.x,-vp.y,-vp.z);*/
-}
-
 void boundingBoxOfTriangle( Point tp1, Point tp2, Point tp3){
 	float xmin,ymin,zmin, xmax,ymax,zmax;
 
@@ -177,15 +166,15 @@ void boundingBoxOfTriangle( Point tp1, Point tp2, Point tp3){
 	if (zmax>0) zmax = int( abs(zmax/d) ) *d + d;
 	else if (zmax<0) zmax = -int( abs(zmax/d) ) *d + d;
 	
-	cp1.insert( xmin, ymin, zmax);
-	cp2.insert( xmax, ymin, zmax);
-	cp3.insert( xmax, ymax, zmax);
-	cp4.insert( xmin, ymax, zmax);
+	bound_box1.insert( xmin, ymin, zmax);
+	bound_box2.insert( xmax, ymin, zmax);
+	bound_box3.insert( xmax, ymax, zmax);
+	bound_box4.insert( xmin, ymax, zmax);
 
-	cp5.insert( xmin, ymin, zmin);
-	cp6.insert( xmax, ymin, zmin);
-	cp7.insert( xmax, ymax, zmin);
-	cp8.insert( xmin, ymax, zmin);
+	bound_box5.insert( xmin, ymin, zmin);
+	bound_box6.insert( xmax, ymin, zmin);
+	bound_box7.insert( xmax, ymax, zmin);
+	bound_box8.insert( xmin, ymax, zmin);
 
 	width_x = abs(xmax-xmin);
 	width_y = abs(ymax-ymin);
@@ -223,52 +212,57 @@ void triangleVoxelization( Point tp1, Point tp2, Point tp3, Point normal){
 	// otherwise, it's upon the triangle so it should be rendered
 
 	Point p;   // this is the point (xmin,ymin,zmax) of every potential-voxel that is being checked
-	float dotpr1,dotpr2,dotpr3,dotpr4,dotpr5,dotpr6,dotpr7,dotpr8; // dot products 
+	float dotpr1,dotpr2,dotpr3,dotpr4,dotpr5,dotpr6,dotpr7,dotpr8; // dot products between a->p(i) vectors (i=0,1,2,...,8) and normal
 	Point ap1,ap2,ap3,ap4,ap5,ap6,ap7,ap8;		// vectors from triangle point to the cube points that have to be checked if they're above or below the triangle
-	Point cp;   // the point (xmin,ymin,zmax) of the voxel to be rendered
+	Point cube1,cube2,cube3,cube4,cube5,cube6,cube7,cube8;   // the point (xmin,ymin,zmax) of the voxel to be rendered
 	
 	for (float i=0; i<=(int(width_x/d)); i++){
 		for (float j=0; j<=(int(width_y/d)); j++){
 			for (float k=0; k<=(int(width_z/d)); k++){	
 
-				p.insert( cp1.x+i*d, cp1.y+j*d, cp1.z-k*d);
-				ap1.insert( tp1.x-p.x, tp1.y-p.y, tp1.z-p.z);   //vector a->p1
+				cube1.insert( bound_box1.x+i*d, bound_box1.y+j*d, bound_box1.z-k*d);
+				ap1.insert( tp1.x-cube1.x, tp1.y-cube1.y, tp1.z-cube1.z);   //vector a->p1
 				dotpr1 = ap1.dotproduct( normal);
 
-				p.insert( p.x+d, p.y, p.z);
-				ap2.insert( tp1.x-p.x, tp1.y-p.y, tp1.z-p.z);  //vector a->p2
+				cube2.insert( cube1.x+d, cube1.y, cube1.z);
+				ap2.insert( tp1.x-cube2.x, tp1.y-cube2.y, tp1.z-cube2.z);  //vector a->p2
 				dotpr2 = ap2.dotproduct( normal);
 				
-				p.insert( p.x, p.y+d, p.z);
-				ap3.insert( tp1.x-p.x, tp1.y-p.y, tp1.z-p.z);  //vector a->p3
+				cube3.insert( cube2.x, cube2.y+d, cube2.z);
+				ap3.insert( tp1.x-cube3.x, tp1.y-cube3.y, tp1.z-cube3.z);  //vector a->p3
 				dotpr3 = ap3.dotproduct( normal);
 				
-				p.insert( p.x-d, p.y, p.z);
-				ap4.insert( tp1.x-p.x, tp1.y-p.y, tp1.z-p.z);  //a->p4
+				cube4.insert( cube3.x-d, cube3.y, cube3.z);
+				ap4.insert( tp1.x-cube4.x, tp1.y-cube4.y, tp1.z-cube4.z);  //a->p4
 				dotpr4 = ap4.dotproduct( normal);
 
-				p.insert( p.x, p.y-d, p.z-d);					
-				ap5.insert( tp1.x-p.x, tp1.y-p.y, tp1.z-p.z);  //a->p5
+				cube5.insert( cube4.x, cube4.y-d, cube4.z-d);					
+				ap5.insert( tp1.x-cube5.x, tp1.y-cube5.y, tp1.z-cube5.z);  //a->p5
 				dotpr5 = ap5.dotproduct( normal);
 
-				p.insert( p.x, p.y+d, p.z);
-				ap6.insert( tp1.x-p.x, tp1.y-p.y, tp1.z-p.z);  //a->p6
+				cube6.insert( cube5.x, cube5.y+d, cube5.z);
+				ap6.insert( tp1.x-cube6.x, tp1.y-cube6.y, tp1.z-cube6.z);  //a->p6
 				dotpr6 = ap6.dotproduct( normal);
 
-				p.insert( p.x+d, p.y, p.z);
-				ap7.insert( tp1.x-p.x, tp1.y-p.y, tp1.z-p.z);  //a->p7
+				cube7.insert( cube6.x+d, cube6.y, cube6.z);
+				ap7.insert( tp1.x-cube7.x, tp1.y-cube7.y, tp1.z-cube7.z);  //a->p7
 				dotpr7 = ap7.dotproduct( normal);
 
-				p.insert( p.x, p.y-d, p.z);
-				ap8.insert( tp1.x-p.x, tp1.y-p.y, tp1.z-p.z);  //a->p8
+				cube8.insert( cube7.x, cube7.y-d, cube7.z);
+				ap8.insert( tp1.x-cube8.x, tp1.y-cube8.y, tp1.z-cube8.z);  //a->p8
 				dotpr8 = ap8.dotproduct( normal);			
-
 
 				if (  !(dotpr1>0 && dotpr2>0 && dotpr3>0 && dotpr4>0 && dotpr5>0 && dotpr6>0 && dotpr7>0 && dotpr8>0) &&
 					  !(dotpr1<0 && dotpr2<0 && dotpr3<0 && dotpr4<0 && dotpr5<0 && dotpr6<0 && dotpr7<0 && dotpr8<0) ){
 
-					cp.insert( cp1.x+i*d, cp1.y+j*d, cp1.z-k*d);
-					if (checkIntersection( tp1, tp2, tp3, normal, cp))	drawVoxel(cp);
+					if ( checkIntersection( tp1, tp2, tp3, normal, cube1) ||
+					     checkIntersection( tp1, tp2, tp3, normal, cube2) ||
+						 checkIntersection( tp1, tp2, tp3, normal, cube3) ||
+					     checkIntersection( tp1, tp2, tp3, normal, cube4) ||
+						 checkIntersection( tp1, tp2, tp3, normal, cube5) ||
+						 checkIntersection( tp1, tp2, tp3, normal, cube6) ||
+						 checkIntersection( tp1, tp2, tp3, normal, cube7) ||
+						 checkIntersection( tp1, tp2, tp3, normal, cube8) )		 drawVoxel(cube1);
 				}
 			}
 		}
@@ -276,7 +270,7 @@ void triangleVoxelization( Point tp1, Point tp2, Point tp3, Point normal){
 }
 
 bool checkIntersection( Point tp1, Point tp2, Point tp3, Point normal, Point lp){
-	lp.insert(lp.x+d/2, lp.y+d/2, lp.z-d/2);
+	//lp.insert(lp.x+d/2, lp.y+d/2, lp.z-d/2);
 	// plane equation: Ax+By+Cz=D
 	// compute triangle vectors
 	Point ab,bc,ca, ac;
@@ -300,7 +294,6 @@ bool checkIntersection( Point tp1, Point tp2, Point tp3, Point normal, Point lp)
 		//return false;
 		t=-t;
 	}
-	else if (t==0) return true;
 	Point interp;
 	interp.insert( lp.x+t*normal.x, lp.y+t*normal.y, lp.z+t*normal.z);
 	// check if the intersection point interp is inside or outside the triangle
@@ -327,60 +320,6 @@ bool checkIntersection( Point tp1, Point tp2, Point tp3, Point normal, Point lp)
 	if (dotpr2<0) return false;  // lp is on the right side
 	
 	return true;
-	//----------------------------
-	//Point p1,p2;
-	//p1.insert( interp.x-tp1.x, interp.y-tp1.y, interp.z-tp1.z);
-	//Point s,r;
-	//s.x = p1.crossProduct(tp2).x/ tp1.crossProduct(tp2).x;
-	//s.y = p1.crossProduct(tp2).y/ tp1.crossProduct(tp2).y;
-	//s.z = p1.crossProduct(tp2).z/ tp1.crossProduct(tp2).z;
-	//p2.insert( interp.x-tp2.x, interp.y-tp1.y, interp.z-tp1.z);
- //   r.x = tp1.crossProduct(p2).x/ tp1.crossProduct(tp2).x;
-	//r.y = tp1.crossProduct(p2).y/ tp1.crossProduct(tp2).y;
-	//r.z = tp1.crossProduct(p2).z/ tp1.crossProduct(tp2).z;
-
-	//Point zero, ace;
-	//ace.insert(1,1,1);
-	//zero.insert(0,0,0);
-	//Point sr;
-	//sr.insert( s.x+r.x, s.y+r.y, s.z+r.z);
-	//if ( (s.comparisonGreater(zero) || s.equals(zero)) && (r.comparisonGreater(zero) || r.equals(zero)) && (sr.comparisonLower(zero) || sr.equals(ace))) return true;
-	//else return false;
-	//------------------------------
-	
-//	Point ab,ac,bc,ca,ba,cb;
-//	ab.insert( tp2.x-tp1.x, tp2.y-tp1.y, tp2.z-tp1.z);  //vector tp1->tp2
-//	ac.insert( tp3.x-tp1.x, tp3.y-tp1.y, tp3.z-tp1.z);
-//	bc.insert( tp3.x-tp2.x, tp3.y-tp2.y, tp3.z-tp2.z);
-//	ca.insert(-ac.x,-ac.y,-ac.z);
-//	ba.insert( -ab.x,-ab.y,-ab.z);
-//	cb.insert(-bc.x,-bc.y,-bc.z);
-//
-//	//Point normal;
-//	normal.insert(ba.crossProduct(ca).x, ca.crossProduct(ca).y, ba.crossProduct(ca).z);
-//
-//	Point ap;
-//	ap.insert( interp.x-tp1.x, interp.y-tp1.y, interp.z-tp1.z);
-//	Point crosspr1;
-//	crosspr1 = ba.crossProduct(ap);
-//	float vnum= normal.dotproduct(crosspr1);
-//	if (vnum<0) return true;
-//
-//	Point bp;
-////	ab.insert(tp2.x-tp1.x, tp2.y-tp1.y, tp2.z-tp1.z);  //vector tp1->tp2
-//	bp.insert( interp.x-tp2.x, interp.y-tp2.y, interp.z-tp2.z);
-//	crosspr1 = cb.crossProduct(bp);
-//	vnum= normal.dotproduct(crosspr1);
-//	if (vnum<0) return true;
-//
-//	Point cp;
-//	cp.insert( interp.x-tp3.x, interp.y-tp3.y, interp.z-tp3.z);
-//	crosspr1 = ac.crossProduct(cp);
-//	vnum= normal.dotproduct(crosspr1);
-//	if (vnum<0) return true;
-//	else return false;
-
-
 
 }
 
