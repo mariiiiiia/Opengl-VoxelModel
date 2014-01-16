@@ -12,3 +12,5 @@ void placeVoxel(Point p1, Point vp);
 void boundingBoxOfTriangle(Point p1, Point p2, Point p3);
 
 void triangleVoxelization( Point tp1, Point tp2, Point tp3, Point normal);
+
+bool checkIntersection( Point tp1, Point tp2, Point tp3, Point normal, Point lp);

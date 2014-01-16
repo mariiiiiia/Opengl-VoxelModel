@@ -63,7 +63,7 @@ void showObj(const std::vector<Point> &vert,const std::vector<Triangle> &tr, boo
 			}
 			else{																	// without texture solid
 				glBegin(GL_TRIANGLES);
-					glColor4f(0.5,0.5,0.6,1.0);
+					glColor4f(0.5,0.5,0.9,1.0);
 
 					glNormal3f(vertNormal.at(tr.at(i).p1).x, vertNormal.at(tr.at(i).p1).y, vertNormal.at(tr.at(i).p1).z);
 					glVertex3f( vert.at(tr.at(i).p1).x, vert.at(tr.at(i).p1).y, vert.at(tr.at(i).p1).z);

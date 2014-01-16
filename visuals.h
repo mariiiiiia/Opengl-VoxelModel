@@ -27,8 +27,17 @@ class Point{
 		return pr;
 	}
 
+	Point crossProduct(Point p){
+		Point cp;
+		cp.x = this->y*p.z - this->z*p.y;
+		cp.y = -(this->x*p.z - this->z*p.x);
+		cp.z = this->x*p.y - this->y*p.x;
+
+		return cp;
+	}
+
 	bool comparisonGreater(Point p){
-		if (this->x>p.x || this->y>p.y || this->z>p.z) return true;
+		if (this->x>p.x && this->y>p.y && this->z>p.z) return true;
 		else return false;
 	}
 	
@@ -89,5 +98,7 @@ int loadTexture(const char *filename);
 void drawBackground();
 
 void drawFloor();
+
+Point CalcNormal( Triangle triangle);
 
 void avgNormals(std::vector<Triangle> triangle, std::vector<Point> vertice);
