@@ -3,62 +3,11 @@
 #define LIGHT1_ON_OFF 3
 #define LIGHT2_ON_OFF 4
 
-class Point{
-	public:
-		float x;
-		float y;
-		float z;
-	
-	bool equals( Point p){
-		if (this->x==p.x && this->y==p.y && this->z==p.z) return true;
-		else return false;
-	}
-
-	void insert(float x, float y, float z){
-		this->x=x;
-		this->y=y;
-		this->z=z;
-	}
-
-	float dotproduct(Point p){
-		float pr;
-		pr = this->x*p.x + this->y*p.y + this->z*p.z;
-		
-		return pr;
-	}
-
-	Point crossProduct(Point p){
-		Point cp;
-		cp.x = this->y*p.z - this->z*p.y;
-		cp.y = -(this->x*p.z - this->z*p.x);
-		cp.z = this->x*p.y - this->y*p.x;
-
-		return cp;
-	}
-
-	bool comparisonGreater(Point p){
-		if (this->x>p.x && this->y>p.y && this->z>p.z) return true;
-		else return false;
-	}
-	
-	bool comparisonLower(Point p){
-		if (this->x<p.x && this->y<p.y && this->z<p.z) return true;
-		else return false;
-	}
-
-};
-
-class Triangle {
-	public:
-		int p1;  // pointers to vertices
-		int p2;
-		int p3;
-};
-
 extern std::vector<Point> vertices;
 extern std::vector<Triangle> triangles;
 extern std::vector<Triangle> hornTriangles;
-
+extern std::vector<Voxel> voxels;
+extern std::vector<Vector> voxelVelocity;
 extern std::string obj_file;
 
 //-------- Functions --------------------------------
@@ -91,14 +40,10 @@ void MenuSelect(int choice);
 
 void lightSources();
 
-Point CalcNormal( Triangle triangle);
+Vector CalcNormal( Triangle triangle);
 
 int loadTexture(const char *filename);
 
-void drawBackground();
-
-void drawFloor();
-
-Point CalcNormal( Triangle triangle);
+void setRoom();
 
 void avgNormals(std::vector<Triangle> triangle, std::vector<Point> vertice);

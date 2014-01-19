@@ -6,12 +6,13 @@
 #include <math.h>
 #include "gl/glut.h"   // - An interface and windows 
                        //   management library
-#include "visuals.h"   // Header file for our OpenGL functions
+#include "structs.h"
+#include "visuals.h"   // for parameter obj_file and checking if it is unicorn
 #include "Load_obj.h"
 #include "Show_Obj.h"
 
 
-void showObj(const std::vector<Point> &vert,const std::vector<Triangle> &tr, bool solid,bool wireframe, const std::vector<Point> vertNormal, int texture)
+void showObj(const std::vector<Point> &vert,const std::vector<Triangle> &tr, bool solid,bool wireframe, const std::vector<Vector> vertNormal, int texture)
 {
 	// variables for spherical transformations - for the body
 	Point spheric_coord1;

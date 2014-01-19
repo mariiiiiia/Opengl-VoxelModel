@@ -3,15 +3,14 @@
 #include <vector>
 #include <string.h>
 #include <math.h>
-#include <iostream>
-#include <fstream>
-
 #include "gl/glut.h"   // - An interface and windows management library
+#include "structs.h"
 #include "visuals.h"   // Header file for our OpenGL functions
 #include "Load_obj.h"
 #include "Show_Obj.h"
 #include "soil/SOIL.h"
 #include "voxelModel.h"
+#include "FreeFall.h"
  
 
 
@@ -33,8 +32,8 @@ float light1_x=0, light1_y=-1, light1_z=0,light2_x=0, light2_y=-1, light2_z=0;
 float light_angle=0.03;
 
 //------ normals -------------
-std::vector<Point> normal;      // normal per face
-std::vector<Point> vertNormal;  // normal per vertice
+std::vector<Vector> normal;      // normal per face
+std::vector<Vector> vertNormal;  // normal per vertice
 
 //---------- TEXTURES ------------------
 static int horseTexture, hornTexture, handTexture, floorTexture;
@@ -42,8 +41,17 @@ static int backgroundTexture1, backgroundTexture2;
 
 //---------- load object ------
 static bool load_obj = true;
+//---------- voxel model -------
+static bool voxelize=false, test_voxel=false;
+float voxel_width=0.5;
+//--------- free fall ---------
+static bool sphere_voxels=false, free_fall=false;
+static float dt=0.02, g=1;
+static Vector voxel_a;
+static int voxel_quantity=0;
+//---------- check collisions ------
+float floor_coord_y=-20;
 
-static bool voxelize=false;
 
 void Render()
 {    
@@ -59,9 +67,9 @@ void Render()
 	  loadObj(obj_file, vertices, triangles, hornTriangles);
 	  
 	  normal.clear();
-	  for (int i=0; i<triangles.size(); i++)
+	  for (int i=0; i<int(triangles.size()); i++)
 	  {
-		  Point n;
+		  Vector n;
 
 		  n = CalcNormal( triangles.at(i) );
 		  normal.push_back( n );
@@ -72,24 +80,23 @@ void Render()
   }
 
   //-------draw background------
-  //drawBackground();
-  //drawFloor();
+  setRoom();
 
 
   //---- bring object at the center of the window so we can see it -----------
   if (obj_file=="objects/unicorn_low.obj"){
-	  glTranslatef(0,0,-15);
+	  glTranslatef(0,0,-40);
 	  //glRotatef(90,0,1,0);
   }
-  else if (obj_file=="objects/hand.obj" || obj_file=="objects/3D_1"){
-	  glTranslatef(0,0,-50);
+  else {
+	  glTranslatef(0,0,-40);
 	  //glRotatef(-90,0,1,0);
   }
   //---------------------------------------------------------
 
-  //---------- render object ----------------
+  //---------- RENDER OBJECT ----------------
   glPushMatrix();
-	  if (voxelize==false){
+  if (voxelize==false && sphere_voxels==false && free_fall==false){
 		  glTranslatef(tx,ty,tz);
 
 		  glRotatef(rotx,1,0,0);
@@ -118,7 +125,7 @@ void Render()
 	  }
   glPopMatrix();
 
-  // draw spheres for light
+  //-------- draw spheres for light --------
   if (light1_state==true){
 	  glPushMatrix();
 		  glColor3f( 0.1, 0.8, 0.0);
@@ -133,9 +140,14 @@ void Render()
 		  glutSolidSphere(0.5,20,20);
 	  glPopMatrix();}
 
-  //-------- VOXELIZE ---------
-  glPushMatrix();
-	  if (voxelize==true){
+  //--------------------- VOXELIZE -----------------------
+  if ((voxelize==true || sphere_voxels==true || free_fall==true) && test_voxel==false) {
+	  setVoxels( voxels, vertices, triangles, normal, voxel_width);
+	  if ( obj_file=="objects/unicorn_low.obj") setVoxels( voxels, vertices, hornTriangles, normal, voxel_width);
+  }
+  //-------------------- SHOW VOXEL MODEL -----------------
+  if (voxelize==true){
+	  glPushMatrix();
 		  glTranslatef(tx,ty,tz);
 
 		  glRotatef(rotx,1,0,0);
@@ -144,10 +156,58 @@ void Render()
 
 		  glScalef( scalex, scaley, scalez);
 
-		  voxelModel( vertices, triangles, normal);
-	  }
-  glPopMatrix();
+		  if (test_voxel==false){
+			  drawVoxel(voxels, voxel_width);
+		  }
+		  // test voxelization
+		  else {
+			  	glColor4f( 1,0,0.5, 1.0);
+	
+				Triangle triangle;
+				triangle.p1 = 1;
+				triangle.p2 = 3; 
+				triangle.p3 = 2;
 
+				std::vector<Triangle> test_triangle;
+				test_triangle.push_back( triangle);
+
+				Point p1,p2,p3;
+				p1.insert( vertices.at(triangle.p1).x, vertices.at(triangle.p1).y, vertices.at(triangle.p1).z); 
+				p2.insert( vertices.at(triangle.p2).x, vertices.at(triangle.p2).y, vertices.at(triangle.p2).z); 
+				p3.insert( vertices.at(triangle.p3).x, vertices.at(triangle.p3).y, vertices.at(triangle.p3).z);
+		
+				glBegin( GL_TRIANGLES);
+				glVertex3f( p1.x,p1.y,p1.z); glVertex3f( p2.x,p2.y,p2.z); glVertex3f(p3.x, p3.y,p3.z);
+				glEnd();
+				glBegin( GL_TRIANGLES);
+				glVertex3f( p1.x,p1.y,p1.z); glVertex3f( p3.x,p3.y,p3.z); glVertex3f(p2.x, p2.y,p2.z);
+				glEnd();
+
+				Vector norm;
+				std::vector<Vector> test_normal;
+				norm = CalcNormal( triangle);
+				test_normal.push_back( norm);
+				
+				setVoxels( voxels, vertices, test_triangle, test_normal, voxel_width);
+				drawVoxel( voxels,voxel_width);
+			}
+      glPopMatrix();
+  }
+
+  //---------------- SHOW SPHERE VOXELS or LET THEM FALL -----------
+  if (sphere_voxels==true || free_fall==true){
+	  glPushMatrix();
+	  glTranslatef(tx,ty,tz);
+
+	  glRotatef(rotx,1,0,0);
+	  glRotatef(roty,0,1,0);
+	  glRotatef(rotz,0,0,1);
+
+	  glScalef( scalex, scaley, scalez);
+
+	  drawSphereVoxels( voxels, voxel_width);
+	  glPopMatrix();
+  }
 
   glutSwapBuffers();             // All drawing commands applied to the 
                                  // hidden buffer, so now, bring forward
@@ -156,9 +216,27 @@ void Render()
 
 //-----------------------------------------------------------
 
-Point CalcNormal( Triangle triangle)
+void Idle()
 {
-	Point v1,v2;
+	if (free_fall==true){
+		if (voxel_a.x==NULL && voxel_a.y==NULL && voxel_a.z==NULL) voxel_a.insert(0,-g,0);
+		freeFallOfVoxels( voxels, voxelVelocity, voxel_a, dt);		
+
+		//check collisions with floor
+		for (int i=0; i<int(voxels.size());i++){
+			if (voxels.at(i).y<=floor_coord_y){
+				voxelVelocity.at(i).y= -voxelVelocity.at(i).y;
+			}
+		}
+	}
+
+	glutPostRedisplay();
+}
+
+
+Vector CalcNormal( Triangle triangle)
+{
+	Vector v1,v2;
 	v1.x=vertices.at(triangle.p2).x-vertices.at(triangle.p1).x; 
 	v1.y=vertices.at(triangle.p2).y-vertices.at(triangle.p1).y; 
 	v1.z=vertices.at(triangle.p2).z-vertices.at(triangle.p1).z;
@@ -167,7 +245,7 @@ Point CalcNormal( Triangle triangle)
 	v2.y=vertices.at(triangle.p3).y-vertices.at(triangle.p1).y; 
 	v2.z=vertices.at(triangle.p3).z-vertices.at(triangle.p1).z;
 
-	Point normal;
+	Vector normal;
 
 	normal.x = v1.y*v2.z - v1.z*v2.y;		
 	normal.y = -v1.x*v2.z + v2.x*v1.z;
@@ -190,15 +268,15 @@ void avgNormals(std::vector<Triangle> triangle,std::vector<Point> vertice)
 
 	vertNormal.clear();
 
-	for (int i=0; i<vertice.size(); i++) {
-		Point zero;
+	for (int i=0; i<int(vertice.size()); i++) {
+		Vector zero;
 		zero.x=0; zero.y=0; zero.z=0;
 
 		vertNormal.push_back(zero);
 		cnt.push_back(0);
 	}
 	
-	for (int i=0; i<triangle.size();i++){
+	for (int i=0; i<int(triangle.size());i++){
 		vertNormal.at( triangle.at(i).p1).x += normal.at(i).x;
 		vertNormal.at( triangle.at(i).p1).y += normal.at(i).y;
 		vertNormal.at( triangle.at(i).p1).z += normal.at(i).z;
@@ -218,7 +296,7 @@ void avgNormals(std::vector<Triangle> triangle,std::vector<Point> vertice)
 		cnt.at( triangle.at(i).p3)++;
 	}
 
-	for (int i=0; i<vertNormal.size(); i++){
+	for (int i=0; i<int(vertNormal.size()); i++){
 		vertNormal.at(i).x= vertNormal.at(i).x/cnt.at(i);
 		vertNormal.at(i).y= vertNormal.at(i).y/cnt.at(i);
 		vertNormal.at(i).z= vertNormal.at(i).z/cnt.at(i);
@@ -248,29 +326,7 @@ int loadTexture(const char *filename)
 	return myIm;
 }
 
-void drawBackground()
-{
-	//load background texture happy_new_year
-	if (backgroundTexture1==NULL){
-	backgroundTexture1 = loadTexture("images/happy_new_year3.png");
-	}
-	
-	// draw background
-	glEnable(GL_TEXTURE_2D);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
-	glBindTexture(GL_TEXTURE_2D, backgroundTexture1);
-
-	glBegin(GL_QUADS);		
-		glTexCoord2f(1.0, 0.0); glVertex3f( -200, -60, -300);
-		glTexCoord2f(0.0, 0.0); glVertex3f( 200, -60, -300);
-		glTexCoord2f(0.0, 1.0); glVertex3f( 200, 150, -300);
-		glTexCoord2f(1.0, 1.0); glVertex3f( -200, 150, -300);
-	glEnd();
-
-	glDisable(GL_TEXTURE_2D);
-}
-
-void drawFloor()
+void setRoom()
 {
 	//load floor texture 
 	if (floorTexture==NULL){
@@ -283,10 +339,29 @@ void drawFloor()
 	glBindTexture(GL_TEXTURE_2D, floorTexture);
 
 	glBegin(GL_QUADS);		
-		glTexCoord2f(0.0, 1.0); glVertex3f( 200, -60, -300);
-		glTexCoord2f(1.0, 1.0); glVertex3f( -200, -60, -300);
-		glTexCoord2f(1.0, 0.0); glVertex3f( -200, -60, -50);
-		glTexCoord2f(0.0, 0.0); glVertex3f( 200, -60, -50);
+		glTexCoord2f(0.0, 1.0); glVertex3f( 200, floor_coord_y, -200);
+		glTexCoord2f(1.0, 1.0); glVertex3f( -200, floor_coord_y, -200);
+		glTexCoord2f(1.0, 0.0); glVertex3f( -200, floor_coord_y, 0);
+		glTexCoord2f(0.0, 0.0); glVertex3f( 200, floor_coord_y, 0);
+	glEnd();
+
+	glDisable(GL_TEXTURE_2D);
+
+	//load background texture happy_new_year
+	if (backgroundTexture1==NULL){
+	backgroundTexture1 = loadTexture("images/wall1.png");
+	}
+	
+	// draw background
+	glEnable(GL_TEXTURE_2D);
+	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+	glBindTexture(GL_TEXTURE_2D, backgroundTexture1);
+
+	glBegin(GL_QUADS);		
+		glTexCoord2f(1.0, 0.0); glVertex3f( -200, -30, -200);
+		glTexCoord2f(0.0, 0.0); glVertex3f( 200, -30, -200);
+		glTexCoord2f(0.0, 1.0); glVertex3f( 200, 170, -200);
+		glTexCoord2f(1.0, 1.0); glVertex3f( -200, 170, -200);
 	glEnd();
 
 	glDisable(GL_TEXTURE_2D);
@@ -349,13 +424,22 @@ void Keyboard(unsigned char key,int x,int y)
 			scalez_state=true, scaley_state=false, scalex_state=false;
 			break;
 		//----------- select object to render -----------------------
-		case '1': {obj_file = "objects/unicorn_low.obj"; load_obj=true; break;}
-		case '2': {obj_file = "objects/hand.obj"; load_obj=true; break;}
-		case '3': {obj_file = "objects/3D_1.obj"; load_obj=true; break;}
-		case '4': {obj_file = "objects/3D_2.obj"; load_obj=true; break;}
+		case '1': {obj_file = "objects/unicorn_low.obj"; load_obj=true; voxels.clear(); break;}
+		case '2': {obj_file = "objects/hand.obj"; load_obj=true; voxels.clear(); break;}
+		case '3': {obj_file = "objects/3D_1.obj"; load_obj=true; voxels.clear(); break;}
+		case '4': {obj_file = "objects/3D_2.obj"; load_obj=true; voxels.clear(); break;}
 		//------------ voxelize odr not -------------
-		case 'd': {voxelize = true; break;}
-		case 'e': {voxelize = false; break;}
+		case 'D': {voxelize = true; test_voxel = true; voxels.clear(); break;}
+		case 'd': {voxelize = true; test_voxel=false; free_fall=false; break;}
+		case 'r': {sphere_voxels=true; voxelize=false; free_fall=false; break;}
+		case 'f': 
+			free_fall = true; voxelize = false; sphere_voxels = false; 
+			initiateVelocities( voxels, voxelVelocity);
+			break;
+		case 'e': 
+			voxelize = false; sphere_voxels=false; free_fall=false; 
+			voxels.clear();
+			break;
 		default : break;
 		}	
 
@@ -473,11 +557,6 @@ void Motion(int x, int y)
 
 		
 	}
-}
-
-void Idle()
-{
-	glutPostRedisplay();
 }
 
 void MenuSelect(int choice)

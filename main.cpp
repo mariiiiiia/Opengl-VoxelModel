@@ -14,6 +14,7 @@
 #include <vector>
 #include "gl/glut.h"   // - An interface and windows 
                        //   management library
+#include "structs.h"
 #include "visuals.h"   // Header file for our OpenGL functions
 #include "Load_obj.h"
 
@@ -24,7 +25,9 @@
 
 std::vector<Point> vertices;
 std::vector<Triangle> triangles;
-std::vector <Triangle> hornTriangles;
+std::vector<Triangle> hornTriangles;
+std::vector<Voxel> voxels;
+std::vector<Vector> voxelVelocity;
 
 std::string obj_file;
 

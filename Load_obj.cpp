@@ -5,14 +5,8 @@
 #include <math.h>
 #include "gl/glut.h"   // - An interface and windows 
                        //   management library
-#include "visuals.h"   // Header file for our OpenGL functions
+#include "structs.h"
 #include "Load_obj.h"
-#include <iostream>
-#include <fstream>
-#include <sstream>
-using namespace std;
-
-
 
 void loadObj(std::string filename, std::vector<Point> &vertices, std::vector<Triangle> &triangles, std::vector<Triangle> &hornTriangles)
 {
@@ -28,8 +22,6 @@ void loadObj(std::string filename, std::vector<Point> &vertices, std::vector<Tri
 	vertices.clear();
 	hornTriangles.clear();
 
-	float cnt=0, avg=0;
-
     if (!(objfile = fopen(filename.c_str(), "rt"))) return;
 
     while (fgets(line, 128, objfile)) {
@@ -39,9 +31,6 @@ void loadObj(std::string filename, std::vector<Point> &vertices, std::vector<Tri
             sscanf(&line[1],"%f %f %f", &v.x, &v.y, &v.z);
 
             vertices.push_back(v);
-
-			cnt++;
-			avg+= v.x;
             break;
 		// create an array with the triangles
         case 'f':
@@ -67,7 +56,7 @@ void loadObj(std::string filename, std::vector<Point> &vertices, std::vector<Tri
 				tr.p3=temp3;
 			}
 
-			if (obj_file=="objects/unicorn_low.obj"){
+			if (filename=="objects/unicorn_low.obj"){
 				if ( vertices.at(tr.p1).z<-4.0 && vertices.at(tr.p2).z<-4.0 && vertices.at(tr.p3).z<-4.0 && vertices.at(tr.p1).y>2.9 && vertices.at(tr.p2).y>2.9 && vertices.at(tr.p3).y>2.9){
 					hornTriangles.push_back(tr);}
 				else triangles.push_back(tr);
@@ -79,9 +68,6 @@ void loadObj(std::string filename, std::vector<Point> &vertices, std::vector<Tri
         };
     }
     fclose(objfile);
-	avg = avg/cnt;
-	//printf("avg=%f\n", avg);
-	//printf("triangles size: %d\n", triangles.size());
 }
 
 
