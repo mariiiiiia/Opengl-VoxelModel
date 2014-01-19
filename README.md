@@ -14,3 +14,6 @@ right-click inside the window and select your menu choices
 
 d: voxel model
 e: undo voxelization
+
+r: voxels become spheres
+f: let the sphere-voxels fall down by the force of gravity
