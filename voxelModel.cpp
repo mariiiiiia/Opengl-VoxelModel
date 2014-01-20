@@ -47,9 +47,9 @@ void setVoxels(std::vector<Voxel > &voxels, const std::vector<Point> &vert, cons
 	}
 }
 
-void drawVoxel( std::vector<Voxel> voxel_grid, float d){
-	for (int i=0; i<int(voxel_grid.size()); i++){
-		float x=voxel_grid.at(i).x, y=voxel_grid.at(i).y, z=voxel_grid.at(i).z;
+void drawVoxel( std::vector<Voxel> voxels, float d){
+	for (int i=0; i<int(voxels.size()); i++){
+		float x=voxels.at(i).x-d/2, y=voxels.at(i).y-d/2, z=voxels.at(i).z+d/2;
 
 		//glColor3f(0.2,0.2,1);	
 		//glBegin(GL_POINTS);
@@ -59,8 +59,11 @@ void drawVoxel( std::vector<Voxel> voxel_grid, float d){
 
 		//if (b==1) {glColor4f(1,1,1, 0.5); b=0;w=1;}
 		//else if (w==1) {glColor4f(0,1.0,0, 0.5); b=1;w=0;}
-		glColor4f(0.9,0.7,0.9, 0.7);
-	
+		
+		//glColor4f(0.9,0.7,0.9, 0.7);
+		glColor3f(1.0,0.5,1.0);
+		
+
 		glBegin(GL_QUADS);
 			glVertex3f( x, y, z-d);
 			glVertex3f( x, y+d, z-d);
@@ -98,44 +101,44 @@ void drawVoxel( std::vector<Voxel> voxel_grid, float d){
 			glVertex3f( x+d, y, z);
 		glEnd();
 
-		glColor3f(1,0,0);
+		//glColor3f(1,0,0);
 
-		glBegin(GL_LINE_LOOP);
-			glVertex3f( x, y, z-d);
-			glVertex3f( x, y+d, z-d);
-			glVertex3f( x+d, y+d, z-d);
-			glVertex3f( x+d, y, z-d);
-		glEnd();
-		glBegin(GL_LINE_LOOP);
-			glVertex3f( x+d, y, z);
-			glVertex3f( x+d, y, z-d);
-			glVertex3f( x+d, y+d, z-d);
-			glVertex3f( x+d, y+d, z);
-		glEnd();
-		glBegin(GL_LINE_LOOP);
-			glVertex3f( x, y, z);
-			glVertex3f( x+d, y, z);
-			glVertex3f( x+d, y+d, z);
-			glVertex3f( x, y+d, z);
-		glEnd();
-		glBegin(GL_LINE_LOOP);
-			glVertex3f( x, y, z);
-			glVertex3f( x, y+d, z);
-			glVertex3f( x, y+d, z-d);
-			glVertex3f( x, y, z-d);
-		glEnd();
-		glBegin(GL_LINE_LOOP);
-			glVertex3f( x, y+d, z-d);
-			glVertex3f( x+d, y+d, z-d);
-			glVertex3f( x+d, y+d, z);
-			glVertex3f( x, y+d, z);
-		glEnd();
-		glBegin(GL_LINE_LOOP);
-			glVertex3f( x, y, z);
-			glVertex3f( x+d, y, z);
-			glVertex3f( x+d, y, z-d);
-			glVertex3f( x, y, z-d);
-		glEnd();
+		//glBegin(GL_LINE_LOOP);
+		//	glVertex3f( x, y, z-d);
+		//	glVertex3f( x, y+d, z-d);
+		//	glVertex3f( x+d, y+d, z-d);
+		//	glVertex3f( x+d, y, z-d);
+		//glEnd();
+		//glBegin(GL_LINE_LOOP);
+		//	glVertex3f( x+d, y, z);
+		//	glVertex3f( x+d, y, z-d);
+		//	glVertex3f( x+d, y+d, z-d);
+		//	glVertex3f( x+d, y+d, z);
+		//glEnd();
+		//glBegin(GL_LINE_LOOP);
+		//	glVertex3f( x, y, z);
+		//	glVertex3f( x+d, y, z);
+		//	glVertex3f( x+d, y+d, z);
+		//	glVertex3f( x, y+d, z);
+		//glEnd();
+		//glBegin(GL_LINE_LOOP);
+		//	glVertex3f( x, y, z);
+		//	glVertex3f( x, y+d, z);
+		//	glVertex3f( x, y+d, z-d);
+		//	glVertex3f( x, y, z-d);
+		//glEnd();
+		//glBegin(GL_LINE_LOOP);
+		//	glVertex3f( x, y+d, z-d);
+		//	glVertex3f( x+d, y+d, z-d);
+		//	glVertex3f( x+d, y+d, z);
+		//	glVertex3f( x, y+d, z);
+		//glEnd();
+		//glBegin(GL_LINE_LOOP);
+		//	glVertex3f( x, y, z);
+		//	glVertex3f( x+d, y, z);
+		//	glVertex3f( x+d, y, z-d);
+		//	glVertex3f( x, y, z-d);
+		//glEnd();
 	}
 }
 
@@ -252,7 +255,7 @@ void triangleVoxelization( Point tp1, Point tp2, Point tp3, Vector normal, float
 						 checkIntersection( tp1, tp2, tp3, normal, cube8) ||
 						 checkIntersection( tp1, tp2, tp3, normal, cp)  ) {
 							 Voxel vox;
-							 vox.insert(cube1.x, cube1.y, cube1.z);
+							 vox.insert(cube1.x+d/2, cube1.y+d/2, cube1.z-d/2);
 							 voxels.push_back(vox);
 					}
 				}

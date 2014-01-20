@@ -83,6 +83,11 @@ public:
 	float y;
 	float z;
 
+	float width(){
+		float voxel_width=1.0;
+		return voxel_width;
+	}
+
 	void insert(float x, float y, float z){
 		this->x=x;
 		this->y=y;

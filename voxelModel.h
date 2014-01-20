@@ -2,7 +2,7 @@
 void setVoxels(std::vector<Voxel> &voxels, const std::vector<Point> &vert,const std::vector<Triangle> &tr, const std::vector<Vector> &normal, float d);
 // draw the voxel model of a given object
 
-void drawVoxel( std::vector<Voxel> voxel_grid, float d);
+void drawVoxel( std::vector<Voxel> voxels, float d);
 // given the coordinates (x,y,z) of low-left corner of a cube, this function draws the voxel
 
 void boundingBoxOfTriangle(Point p1, Point p2, Point p3, float d);

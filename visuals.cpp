@@ -13,7 +13,6 @@
 #include "FreeFall.h"
  
 
-
 static int left_button_state=0;
 //-------------- variables for scaling -------------------
 static float scalex = 1, scaley = 1, scalez = 1;
@@ -43,10 +42,10 @@ static int backgroundTexture1, backgroundTexture2;
 static bool load_obj = true;
 //---------- voxel model -------
 static bool voxelize=false, test_voxel=false;
-float voxel_width=0.5;
+static float voxel_width=1.0;
 //--------- free fall ---------
 static bool sphere_voxels=false, free_fall=false;
-static float dt=0.02, g=1;
+static float dt=0.05, g=1;
 static Vector voxel_a;
 static int voxel_quantity=0;
 //---------- check collisions ------
@@ -144,6 +143,7 @@ void Render()
   if ((voxelize==true || sphere_voxels==true || free_fall==true) && test_voxel==false) {
 	  setVoxels( voxels, vertices, triangles, normal, voxel_width);
 	  if ( obj_file=="objects/unicorn_low.obj") setVoxels( voxels, vertices, hornTriangles, normal, voxel_width);
+	  //initiateVelocities( voxels, voxelVelocity);
   }
   //-------------------- SHOW VOXEL MODEL -----------------
   if (voxelize==true){
@@ -222,17 +222,15 @@ void Idle()
 		if (voxel_a.x==NULL && voxel_a.y==NULL && voxel_a.z==NULL) voxel_a.insert(0,-g,0);
 		freeFallOfVoxels( voxels, voxelVelocity, voxel_a, dt);		
 
-		//check collisions with floor
-		for (int i=0; i<int(voxels.size());i++){
-			if (voxels.at(i).y<=floor_coord_y){
-				voxelVelocity.at(i).y= -voxelVelocity.at(i).y;
-			}
-		}
+		// check floor collisions
+		checkFloorCollisions( voxels, voxelVelocity, floor_coord_y);
+
+		//check collisions with each other
+		checkVoxelCollisions( voxels, voxelVelocity);
 	}
 
 	glutPostRedisplay();
 }
-
 
 Vector CalcNormal( Triangle triangle)
 {
@@ -339,10 +337,10 @@ void setRoom()
 	glBindTexture(GL_TEXTURE_2D, floorTexture);
 
 	glBegin(GL_QUADS);		
-		glTexCoord2f(0.0, 1.0); glVertex3f( 200, floor_coord_y, -200);
-		glTexCoord2f(1.0, 1.0); glVertex3f( -200, floor_coord_y, -200);
-		glTexCoord2f(1.0, 0.0); glVertex3f( -200, floor_coord_y, 0);
-		glTexCoord2f(0.0, 0.0); glVertex3f( 200, floor_coord_y, 0);
+		glTexCoord2f(0.0, 1.0); glVertex3f( 100, floor_coord_y, -100);
+		glTexCoord2f(1.0, 1.0); glVertex3f( -100, floor_coord_y, -100);
+		glTexCoord2f(1.0, 0.0); glVertex3f( -100, floor_coord_y, 0);
+		glTexCoord2f(0.0, 0.0); glVertex3f( 100, floor_coord_y, 0);
 	glEnd();
 
 	glDisable(GL_TEXTURE_2D);
@@ -358,10 +356,10 @@ void setRoom()
 	glBindTexture(GL_TEXTURE_2D, backgroundTexture1);
 
 	glBegin(GL_QUADS);		
-		glTexCoord2f(1.0, 0.0); glVertex3f( -200, -30, -200);
-		glTexCoord2f(0.0, 0.0); glVertex3f( 200, -30, -200);
-		glTexCoord2f(0.0, 1.0); glVertex3f( 200, 170, -200);
-		glTexCoord2f(1.0, 1.0); glVertex3f( -200, 170, -200);
+		glTexCoord2f(1.0, 0.0); glVertex3f( -100, -30, -100);
+		glTexCoord2f(0.0, 0.0); glVertex3f( 100, -30, -100);
+		glTexCoord2f(0.0, 1.0); glVertex3f( 100, 170, -100);
+		glTexCoord2f(1.0, 1.0); glVertex3f( -100, 170, -100);
 	glEnd();
 
 	glDisable(GL_TEXTURE_2D);
@@ -429,9 +427,20 @@ void Keyboard(unsigned char key,int x,int y)
 		case '3': {obj_file = "objects/3D_1.obj"; load_obj=true; voxels.clear(); break;}
 		case '4': {obj_file = "objects/3D_2.obj"; load_obj=true; voxels.clear(); break;}
 		//------------ voxelize odr not -------------
-		case 'D': {voxelize = true; test_voxel = true; voxels.clear(); break;}
-		case 'd': {voxelize = true; test_voxel=false; free_fall=false; break;}
-		case 'r': {sphere_voxels=true; voxelize=false; free_fall=false; break;}
+		case 'D': 
+			voxelize = true; test_voxel = true; voxels.clear(); 
+			initiateVelocities( voxels, voxelVelocity);
+			break;
+		case 'd': 
+			voxelize = true; test_voxel=false; free_fall=false;
+			voxels.clear();
+			initiateVelocities( voxels, voxelVelocity);
+			break;
+		case 'r': 
+			sphere_voxels=true; voxelize=false; free_fall=false; 
+			voxels.clear();
+			initiateVelocities( voxels, voxelVelocity);
+			break;
 		case 'f': 
 			free_fall = true; voxelize = false; sphere_voxels = false; 
 			initiateVelocities( voxels, voxelVelocity);
@@ -439,6 +448,7 @@ void Keyboard(unsigned char key,int x,int y)
 		case 'e': 
 			voxelize = false; sphere_voxels=false; free_fall=false; 
 			voxels.clear();
+			initiateVelocities( voxels, voxelVelocity);
 			break;
 		default : break;
 		}	
