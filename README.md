@@ -17,3 +17,5 @@ e: undo voxelization
 
 r: voxels become spheres
 f: let the sphere-voxels fall down by the force of gravity
+
+space: rewind free fall

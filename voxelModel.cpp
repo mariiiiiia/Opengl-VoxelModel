@@ -29,8 +29,10 @@ void setVoxels(std::vector<Voxel > &voxels, const std::vector<Point> &vert, cons
 		}			
 		//delete multiple voxels at same coordinates
 		for (int i=0; i<int(voxels.size()); i++){
-			for (int j=0; j<int(voxels.size()); j++){
-				if ( voxels.at(i).equals( voxels.at(j) )) voxels.erase( voxels.begin()+j);
+			for (int j=i; j<int(voxels.size()); j++){
+				if ( i!=j && voxels.at(i).equals( voxels.at(j)) ) {
+					voxels.erase( voxels.begin()+j);
+				}
 			}
 		}
 		// sort voxels on the y axes 

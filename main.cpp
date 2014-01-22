@@ -25,7 +25,6 @@
 
 std::vector<Point> vertices;
 std::vector<Triangle> triangles;
-std::vector<Triangle> hornTriangles;
 std::vector<Voxel> voxels;
 std::vector<Vector> voxelVelocity;
 

@@ -5,10 +5,10 @@
 
 extern std::vector<Point> vertices;
 extern std::vector<Triangle> triangles;
-extern std::vector<Triangle> hornTriangles;
 extern std::vector<Voxel> voxels;
 extern std::vector<Vector> voxelVelocity;
 extern std::string obj_file;
+//extern std::vector< std::vector< std::vector<Point> >> buckets;
 
 //-------- Functions --------------------------------
 

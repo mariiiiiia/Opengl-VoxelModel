@@ -67,6 +67,15 @@ public:
 		return cp;
 	}
 
+	bool comparisonGreaterOrEqual(Vector v){
+		if (this->x>=v.x && this->y>=v.y && this->z>=v.z) return true;
+		else return false;
+	}
+	
+	bool comparisonLowerOrEqual(Vector v){
+		if (this->x<=v.x && this->y<=v.y && this->z<=v.z) return true;
+		else return false;
+	}
 
 };
 

@@ -11,7 +11,10 @@
 #include "soil/SOIL.h"
 #include "voxelModel.h"
 #include "FreeFall.h"
- 
+#include <windows.h>
+
+
+static std::vector<Triangle> hornTriangles;
 
 static int left_button_state=0;
 //-------------- variables for scaling -------------------
@@ -27,8 +30,8 @@ static float rotx = 0.0, roty=0.0, rotz=0.0;
 //------------- variables for object rendering and lights -----------
 static bool solid=true, wireframe=false;
 static bool light1_state = false, light2_state = false;
-float light1_x=0, light1_y=-1, light1_z=0,light2_x=0, light2_y=-1, light2_z=0;
-float light_angle=0.03;
+static float light1_x=0, light1_y=-1, light1_z=0,light2_x=0, light2_y=-1, light2_z=0;
+static float light_angle=0.03;
 
 //------ normals -------------
 std::vector<Vector> normal;      // normal per face
@@ -41,15 +44,15 @@ static int backgroundTexture1, backgroundTexture2;
 //---------- load object ------
 static bool load_obj = true;
 //---------- voxel model -------
-static bool voxelize=false, test_voxel=false;
+static bool voxel_model=false, test_voxel=false;
 static float voxel_width=1.0;
 //--------- free fall ---------
 static bool sphere_voxels=false, free_fall=false;
-static float dt=0.05, g=1;
-static Vector voxel_a;
-static int voxel_quantity=0;
+static float dt=0.01;
+static bool rewind_free_fall=false;
+static std::vector< std::vector<Voxel>> voxel_data;
 //---------- check collisions ------
-float floor_coord_y=-20;
+float floor_coord_y=-10;
 
 
 void Render()
@@ -81,21 +84,13 @@ void Render()
   //-------draw background------
   setRoom();
 
-
   //---- bring object at the center of the window so we can see it -----------
-  if (obj_file=="objects/unicorn_low.obj"){
-	  glTranslatef(0,0,-40);
-	  //glRotatef(90,0,1,0);
-  }
-  else {
-	  glTranslatef(0,0,-40);
-	  //glRotatef(-90,0,1,0);
-  }
+  glTranslatef(0,0,-40);
   //---------------------------------------------------------
 
   //---------- RENDER OBJECT ----------------
   glPushMatrix();
-  if (voxelize==false && sphere_voxels==false && free_fall==false){
+  if (voxel_model==false && sphere_voxels==false && free_fall==false && rewind_free_fall==false){
 		  glTranslatef(tx,ty,tz);
 
 		  glRotatef(rotx,1,0,0);
@@ -106,7 +101,7 @@ void Render()
 
 		  if (obj_file=="objects/unicorn_low.obj"){
 			  glColor4f(1,1,1,1.0);
-			  glMateriali(GL_FRONT,GL_SHININESS,50);
+			  glMateriali(GL_FRONT,GL_SHININESS,30);
 			  showObj(vertices, triangles, solid, wireframe, vertNormal, horseTexture);
 			  glColor4f(1,1,1,1.0);
 			  glMateriali(GL_FRONT,GL_SHININESS,128);
@@ -128,25 +123,24 @@ void Render()
   if (light1_state==true){
 	  glPushMatrix();
 		  glColor3f( 0.1, 0.8, 0.0);
-		  glTranslatef(-8,5,4);
+		  glTranslatef(-8,5,10);
 		  glutSolidSphere(0.5,20,20);
 	  glPopMatrix();}
 
   if (light2_state==true){
 	  glPushMatrix();
 		  glColor3f( 1.0, 0.0, 0.0);
-		  glTranslatef(8,5,4);
+		  glTranslatef(8,5,10);
 		  glutSolidSphere(0.5,20,20);
 	  glPopMatrix();}
 
   //--------------------- VOXELIZE -----------------------
-  if ((voxelize==true || sphere_voxels==true || free_fall==true) && test_voxel==false) {
+  if ((voxel_model==true || sphere_voxels==true || free_fall==true) && test_voxel==false) {
 	  setVoxels( voxels, vertices, triangles, normal, voxel_width);
 	  if ( obj_file=="objects/unicorn_low.obj") setVoxels( voxels, vertices, hornTriangles, normal, voxel_width);
-	  //initiateVelocities( voxels, voxelVelocity);
   }
   //-------------------- SHOW VOXEL MODEL -----------------
-  if (voxelize==true){
+  if (voxel_model==true){
 	  glPushMatrix();
 		  glTranslatef(tx,ty,tz);
 
@@ -205,8 +199,40 @@ void Render()
 
 	  glScalef( scalex, scaley, scalez);
 
-	  drawSphereVoxels( voxels, voxel_width);
+	  drawSphereVoxels( voxels );
 	  glPopMatrix();
+  }
+  else if (rewind_free_fall){
+	  if (voxel_data.size()>1) {
+		  glPushMatrix();
+		  glTranslatef(tx,ty,tz);
+
+	      glRotatef(rotx,1,0,0);
+		  glRotatef(roty,0,1,0);
+		  glRotatef(rotz,0,0,1);
+
+		  glScalef( scalex, scaley, scalez);
+		  
+		  drawSphereVoxels( voxel_data.back());
+		  voxel_data.pop_back();
+		  //Sleep(10);
+		  glPopMatrix();
+	  }
+	  else {
+		  glPushMatrix();
+		  glTranslatef(tx,ty,tz);
+
+	      glRotatef(rotx,1,0,0);
+		  glRotatef(roty,0,1,0);
+		  glRotatef(rotz,0,0,1);
+
+		  glScalef( scalex, scaley, scalez);
+		  
+		  drawSphereVoxels( voxel_data.back());
+		  voxels.clear();
+		  //initiateVelocities( voxels, voxelVelocity);
+		  glPopMatrix();
+	  }
   }
 
   glutSwapBuffers();             // All drawing commands applied to the 
@@ -214,19 +240,19 @@ void Render()
                                  // the hidden buffer and hide the visible one
 }
 
-//-----------------------------------------------------------
-
 void Idle()
 {
-	if (free_fall==true){
-		if (voxel_a.x==NULL && voxel_a.y==NULL && voxel_a.z==NULL) voxel_a.insert(0,-g,0);
-		freeFallOfVoxels( voxels, voxelVelocity, voxel_a, dt);		
-
+	if (free_fall==true){		
 		// check floor collisions
-		checkFloorCollisions( voxels, voxelVelocity, floor_coord_y);
+		checkFloorCollisions( voxels, voxelVelocity, floor_coord_y-ty);	
 
 		//check collisions with each other
 		checkVoxelCollisions( voxels, voxelVelocity);
+
+		//checkVoxelCollisionsInBuckets( voxels, voxelVelocity);
+
+		//simulate free falling
+		freeFallOfVoxels( voxels, voxelVelocity, voxel_data, dt);
 	}
 
 	glutPostRedisplay();
@@ -356,10 +382,10 @@ void setRoom()
 	glBindTexture(GL_TEXTURE_2D, backgroundTexture1);
 
 	glBegin(GL_QUADS);		
-		glTexCoord2f(1.0, 0.0); glVertex3f( -100, -30, -100);
-		glTexCoord2f(0.0, 0.0); glVertex3f( 100, -30, -100);
-		glTexCoord2f(0.0, 1.0); glVertex3f( 100, 170, -100);
-		glTexCoord2f(1.0, 1.0); glVertex3f( -100, 170, -100);
+		glTexCoord2f(1.0, 0.0); glVertex3f( -100, floor_coord_y, -100);
+		glTexCoord2f(0.0, 0.0); glVertex3f( 100, floor_coord_y, -100);
+		glTexCoord2f(0.0, 1.0); glVertex3f( 100, floor_coord_y+70, -100);
+		glTexCoord2f(1.0, 1.0); glVertex3f( -100, floor_coord_y+70, -100);
 	glEnd();
 
 	glDisable(GL_TEXTURE_2D);
@@ -428,30 +454,35 @@ void Keyboard(unsigned char key,int x,int y)
 		case '4': {obj_file = "objects/3D_2.obj"; load_obj=true; voxels.clear(); break;}
 		//------------ voxelize odr not -------------
 		case 'D': 
-			voxelize = true; test_voxel = true; voxels.clear(); 
+			voxel_model = true; test_voxel = true; voxels.clear(); 
 			initiateVelocities( voxels, voxelVelocity);
 			break;
 		case 'd': 
-			voxelize = true; test_voxel=false; free_fall=false;
+			voxel_model = true; test_voxel=false; free_fall=false;
 			voxels.clear();
 			initiateVelocities( voxels, voxelVelocity);
 			break;
 		case 'r': 
-			sphere_voxels=true; voxelize=false; free_fall=false; 
+			sphere_voxels=true; voxel_model=false; free_fall=false; 
 			voxels.clear();
 			initiateVelocities( voxels, voxelVelocity);
 			break;
 		case 'f': 
-			free_fall = true; voxelize = false; sphere_voxels = false; 
+			free_fall = true; rewind_free_fall=false; voxel_model = false; sphere_voxels = false; 
 			initiateVelocities( voxels, voxelVelocity);
 			break;
 		case 'e': 
-			voxelize = false; sphere_voxels=false; free_fall=false; 
+			voxel_model = false; sphere_voxels=false; free_fall=false; 
 			voxels.clear();
 			initiateVelocities( voxels, voxelVelocity);
 			break;
+		//====== reverse =======
+		case 32:
+			rewind_free_fall = true; free_fall=false; voxel_model = false; sphere_voxels=false;
+			break;
 		default : break;
 		}	
+
 
 	glutPostRedisplay();
 	
@@ -589,7 +620,7 @@ void lightSources()
 {
 	if (light1_state==false) glDisable(GL_LIGHT1);
 	else if (light1_state==true){
-		GLfloat light_position1[] = { -8,5, 4, 1.0 };
+		GLfloat light_position1[] = { -8,5, 10, 1.0 };
 		GLfloat specularLight1[] = { 0.5, 1.0, 0.0, 1.0 };
 		//GLfloat spotDir1[] = {0.0, 0.0, 0.0, 1.0};
 
@@ -605,7 +636,7 @@ void lightSources()
 
 	if (light2_state==false) glDisable(GL_LIGHT2);
 	else if (light2_state==true){
-		GLfloat light_position2[] = { 8,5,4, 1.0 };
+		GLfloat light_position2[] = { 8,5,10, 1.0 };
 		GLfloat specularLight2[] = { 1.0, 0.2, 0.1, 1.0 };
 		//GLfloat spotDir2[] = {0.0, 0.0, 0.0};
 

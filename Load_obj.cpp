@@ -59,7 +59,7 @@ void loadObj(std::string filename, std::vector<Point> &vertices, std::vector<Tri
 			if (filename=="objects/unicorn_low.obj"){
 				if ( vertices.at(tr.p1).z<-4.0 && vertices.at(tr.p2).z<-4.0 && vertices.at(tr.p3).z<-4.0 && vertices.at(tr.p1).y>2.9 && vertices.at(tr.p2).y>2.9 && vertices.at(tr.p3).y>2.9){
 					hornTriangles.push_back(tr);}
-				else triangles.push_back(tr);
+				triangles.push_back(tr);
 			}
 			else triangles.push_back(tr);
             break;
