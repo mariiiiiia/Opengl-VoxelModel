@@ -8,14 +8,14 @@
 #include "voxelModel.h"
 
 
-Point bound_box1, bound_box2, bound_box3, bound_box4, bound_box5, bound_box6, bound_box7, bound_box8;  // points that define the bounding box, where i search for the voxels that should be drawn
-float width_x, width_y, width_z;        // widths of bounding box
 
-//float d=0.3;	// voxel width
+Point bound_box1;		// points that define the bounding box, where i search for the voxels that should be drawn
+static float width_x, width_y, width_z;        // widths of bounding box
 
-int w=0, b=1;
+void setVoxels(std::vector<Voxel > &voxels, const std::vector<Point> vert, const std::vector<Triangle> tr, const std::vector<Vector> normal){   
+	float d=VOXEL_WIDTH;      // VOXEL WIDTH
+	std::vector< Point> bound_box;
 
-void setVoxels(std::vector<Voxel > &voxels, const std::vector<Point> &vert, const std::vector<Triangle> &tr, const std::vector<Vector> &normal, float d){   //d = voxel width
 	//voxels.clear();
 	
 	if (int(voxels.size())==0){
@@ -49,6 +49,15 @@ void setVoxels(std::vector<Voxel > &voxels, const std::vector<Point> &vert, cons
 	}
 }
 
+#define GL_SQUARE(x, y, z, d)  do { \
+	glBegin(GL_QUADS); \
+			glVertex3f( x, y, z-d); \
+			glVertex3f( x, y+d, z-d); \
+			glVertex3f( x+d, y+d, z-d); \
+			glVertex3f( x+d, y, z-d); \
+			glEnd(); } while(0)
+
+// GL_SQUARE(x, y, z, d);
 void drawVoxel( std::vector<Voxel> voxels, float d){
 	for (int i=0; i<int(voxels.size()); i++){
 		float x=voxels.at(i).x-d/2, y=voxels.at(i).y-d/2, z=voxels.at(i).z+d/2;
@@ -57,13 +66,9 @@ void drawVoxel( std::vector<Voxel> voxels, float d){
 		//glBegin(GL_POINTS);
 		//glVertex3f( x+d/2, y+d/2, z-d/2);
 		//glEnd();
-
-
-		//if (b==1) {glColor4f(1,1,1, 0.5); b=0;w=1;}
-		//else if (w==1) {glColor4f(0,1.0,0, 0.5); b=1;w=0;}
 		
 		//glColor4f(0.9,0.7,0.9, 0.7);
-		glColor3f(1.0,0.5,1.0);
+		glColor4f(0.1,0.8,0.5,1.0);
 		
 
 		glBegin(GL_QUADS);
@@ -179,14 +184,6 @@ void boundingBoxOfTriangle( Point tp1, Point tp2, Point tp3, float d){
 	if (zmin==0 && zmax==0) zmin=-d;
 
 	bound_box1.insert( xmin, ymin, zmax);
-	bound_box2.insert( xmax, ymin, zmax);
-	bound_box3.insert( xmax, ymax, zmax);
-	bound_box4.insert( xmin, ymax, zmax);
-
-	bound_box5.insert( xmin, ymin, zmin);
-	bound_box6.insert( xmax, ymin, zmin);
-	bound_box7.insert( xmax, ymax, zmin);
-	bound_box8.insert( xmin, ymax, zmin);
 
 	width_x = abs(xmax-xmin);
 	width_y = abs(ymax-ymin);
@@ -267,7 +264,6 @@ void triangleVoxelization( Point tp1, Point tp2, Point tp3, Vector normal, float
 }
 
 bool checkIntersection( Point tp1, Point tp2, Point tp3, Vector normal, Point lp){
-	//lp.insert(lp.x+d/2, lp.y+d/2, lp.z-d/2);
 	// plane equation: Ax+By+Cz=D
 	// compute triangle vectors
 	Vector ab,bc,ca, ac;

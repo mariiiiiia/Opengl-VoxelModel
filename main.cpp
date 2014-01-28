@@ -16,21 +16,15 @@
                        //   management library
 #include "structs.h"
 #include "visuals.h"   // Header file for our OpenGL functions
-#include "Load_obj.h"
-
-
-
 
 ////////////////// State Variables ////////////////////////
+std::string obj_file;
 
 std::vector<Point> vertices;
 std::vector<Triangle> triangles;
+
 std::vector<Voxel> voxels;
 std::vector<Vector> voxelVelocity;
-
-std::string obj_file;
-
-GLuint texName;
 
 /////////////// Main Program ///////////////////////////
 

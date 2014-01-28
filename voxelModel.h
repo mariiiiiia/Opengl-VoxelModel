@@ -1,5 +1,5 @@
 
-void setVoxels(std::vector<Voxel> &voxels, const std::vector<Point> &vert,const std::vector<Triangle> &tr, const std::vector<Vector> &normal, float d);
+void setVoxels(std::vector<Voxel> &voxels, const std::vector<Point> vert,const std::vector<Triangle> tr, const std::vector<Vector> normal);
 // draw the voxel model of a given object
 
 void drawVoxel( std::vector<Voxel> voxels, float d);
@@ -14,3 +14,11 @@ void triangleVoxelization( Point tp1, Point tp2, Point tp3, Vector normal, float
 bool checkIntersection( Point tp1, Point tp2, Point tp3, Vector normal, Point lp);
 // this function takes as arguments 3 points of a triangle,its normal vector and a point. 
 //This point lp is one of the 8 points of a cube that we want to define if it is voxel or not. 
+
+class VoxelModel{
+public:
+	std::vector< Voxel> voxel;
+
+	void setVoxels(std::vector<Voxel> &voxels, const std::vector<Point> vert,const std::vector<Triangle> tr, const std::vector<Vector> normal){};
+
+}

@@ -1,18 +1,12 @@
 #include <stdio.h>     // - Just for some ASCII messages
-#include <string>
-#include <array>
 #include <vector>
+#include <map>
 #include "gl/glut.h"   // - An interface and windows 
                        //   management library
 #include "structs.h"
 #include "FreeFall.h"
-#include <windows.h>
+#include "counter.h"
 #include <math.h>
-#include <stdexcept>      // std::out_of_range
-#include <iostream>
-#include <fstream>
-#include <sstream>
-using namespace std;
 
 
 static std::vector< std::vector<Voxel> > buckets;
@@ -20,30 +14,6 @@ static std::vector< std::vector<Vector>> buck_velocities;
 
 static int voxel_quantity=0;
 
-//---- run time calculations ---
-double PCFreq = 0.0;
-__int64 CounterStart = 0;
-
-
-// ============ runtime counter =============
-
-void StartCounter()
-{
-    LARGE_INTEGER li;
-    if(!QueryPerformanceFrequency(&li)) printf( "QueryPerformanceFrequency failed!\n");
-
-    PCFreq = double(li.QuadPart)/1000.0;
-
-    QueryPerformanceCounter(&li);
-    CounterStart = li.QuadPart;
-}
-
-double GetCounter()
-{
-    LARGE_INTEGER li;
-    QueryPerformanceCounter(&li);
-    return double(li.QuadPart-CounterStart)/PCFreq;
-}
 
 
 //================ free falling functions ==============
@@ -66,9 +36,6 @@ void freeFallOfVoxels( std::vector<Voxel> &voxels, std::vector<Vector> &voxelVel
 	//StartCounter();
 
 	float g=20;  // gravity
-	//FILE * voxels_coords_file;
-	//voxels_coords_file = fopen("voxels_coords.txt", "a");
-	//stringstream ss_voxel_coords;
 
 	// U=Uo+a*dt,	x=xo+U*dt
 	Vector voxel_transp;
@@ -82,39 +49,74 @@ void freeFallOfVoxels( std::vector<Voxel> &voxels, std::vector<Vector> &voxelVel
 				voxel_quantity=int(voxels.size());
 			}
 			voxelVelocity.at(i).insert( voxelVelocity.at(i).x- 0.0001*dt, voxelVelocity.at(i).y- g*dt, voxelVelocity.at(i).z);
+			//voxelVelocity.at(i).insert( voxelVelocity.at(i).x, voxelVelocity.at(i).y- g*dt, voxelVelocity.at(i).z);
 			voxel_transp.insert(voxels.at(i).x+ voxelVelocity.at(i).x*dt, voxels.at(i).y+voxelVelocity.at(i).y*dt, voxels.at(i).z+voxelVelocity.at(i).z*dt);
 			voxels.at(i).insert( voxel_transp.x, voxel_transp.y, voxel_transp.z);
 		}
-
-		//fprintf( voxels_coords_file, "%d %f %f %f\n", i, voxels.at(i).x, voxels.at(i).y, voxels.at(i).z) ;
-		//ss_voxel_coords << voxels.at(i).x << " " << voxels.at(i).y << " " << voxels.at(i).z << "\n";
+		
 		voxel_data_t0.push_back( voxels.at(i));
 	}
+
 	voxel_data.push_back( voxel_data_t0);
-	//fclose( voxels_coords_file);
-	//writeToFile( ss_voxel_coords);
 
 	//printf("%f\n", GetCounter());
 }
 
-void checkFloorCollisions( std::vector<Voxel> &voxels, std::vector<Vector> &voxelVelocity, float floor_coord_y ){
+void checkFloorCollisions( std::vector<Voxel> &voxels, std::vector<Vector> &voxelVelocity, float tx, float ty, float tz, float dt ){
+	float floor = FLOOR -ty, right_wall = RIGHT_WALL -tx, left_wall = LEFT_WALL -tx, far_wall = FAR_WALL -tz, near_wall = NEAR_WALL -tz; 
+
+	float penetration;
+	float n=2;  // force of friction
+	
 	float e=1.0;   //this is factor of restitution
 	Vector normal;
 	float Vn, jf;
-	
 	normal.insert( 0,1,0);
 
-	//check collisions with floor
 	for (int i=0; i<int(voxels.size());i++){
-		if (voxels.at(i).y- voxels.at(0).width()/2 <= floor_coord_y){
+
+		//============= check collisions with floor ===========================
+
+		if ( (voxels.at(i).y- voxels.at(0).width()/2) <= floor){
 			Vn = voxelVelocity.at(i).dotproduct( normal);
 			jf= -(1+e)*Vn/2;
-			voxelVelocity.at(i).y= -voxelVelocity.at(i).y - jf;
-			//voxelVelocity.at(i).y= - voxelVelocity.at(i).y;
+			//voxelVelocity.at(i).y = voxelVelocity.at(i).y + jf;
+			voxelVelocity.at(i).y= - voxelVelocity.at(i).y;
 
-			float penetration = -voxels.at(i).y + (voxels.at(i).width()/2) + floor_coord_y;
+			penetration = (voxels.at(i).width()/2) + floor - voxels.at(i).y;
 			voxels.at(i).y += penetration+ 0.001;
 		}
+
+		if ( (voxels.at(i).y- voxels.at(0).width()/2) > (floor - voxels.at(0).width()/10) &&
+			 (voxels.at(i).y- voxels.at(0).width()/2) < (floor + voxels.at(0).width()/10) ){
+			if (voxelVelocity.at(i).x< 0) {
+				voxelVelocity.at(i).x = voxelVelocity.at(i).x + n*dt; }
+			else  {
+				voxelVelocity.at(i).x = voxelVelocity.at(i).x - n*dt;}
+			if (voxelVelocity.at(i).z< 0) {
+				voxelVelocity.at(i).z = voxelVelocity.at(i).z + n*dt; }
+			else  {
+				voxelVelocity.at(i).z = voxelVelocity.at(i).z - n*dt; }
+		}
+
+		//================== check collisions with walls =============
+		if (voxels.at(i).x>=0 && (voxels.at(i).x+ voxels.at(0).width()/2)>= right_wall) {
+			voxelVelocity.at(i).x = -voxelVelocity.at(i).x;
+			penetration = voxels.at(0).width()/2 - (right_wall - voxels.at(i).x);
+			voxels.at(i).x -= penetration +0.001; }
+		else if (voxels.at(i).x<0 && (voxels.at(i).x - voxels.at(0).width()/2)<= left_wall) {
+			voxelVelocity.at(i).x = -voxelVelocity.at(i).x;
+			penetration = voxels.at(0).width()/2 - ( - left_wall + voxels.at(i).x);
+			voxels.at(i).x += penetration +0.001; }
+
+		if (voxels.at(i).z-40>=0 && (voxels.at(i).z-40 + voxels.at(0).width()/2)>= near_wall) {
+			voxelVelocity.at(i).z = -voxelVelocity.at(i).z;
+			penetration = voxels.at(0).width()/2 - (near_wall - voxels.at(i).z+40);
+			voxels.at(i).z -= penetration +0.001; }
+		else if (voxels.at(i).z-40<0 && (voxels.at(i).z-40- voxels.at(0).width()/2)<= far_wall) {
+			voxelVelocity.at(i).z = -voxelVelocity.at(i).z;
+			penetration = voxels.at(0).width()/2 - ( - far_wall + voxels.at(i).z-40);
+			voxels.at(i).z += penetration +0.001; }
 	}
 }
 
@@ -128,15 +130,14 @@ void checkVoxelCollisions( std::vector<Voxel> &voxels, std::vector<Vector> &voxe
 	//check collisions with each other
 	for (int i=0; i<int(voxels.size()); i++){
 		for (int j=i+1; j<int(voxels.size()); j++){
-			if (i!=j && 
-			    (voxels.at(i).x-voxels.at(j).x)<(3*voxels.at(i).width()/2) && 
+			if ((voxels.at(i).x-voxels.at(j).x)<(3*voxels.at(i).width()/2) && 
 			    (voxels.at(i).y-voxels.at(j).y)<(3*voxels.at(i).width()/2) && 
 			    (voxels.at(i).z-voxels.at(j).z)<(3*voxels.at(i).width()/2) &&
 				!voxelVelocity.at(i).equals( voxelVelocity.at(j))  ) 
 			{
-				sqr_dist = pow( voxels.at(i).x-voxels.at(j).x,2) + \
-				     	   pow( voxels.at(i).y-voxels.at(j).y,2) + \
-						   pow( voxels.at(i).z-voxels.at(j).z,2);
+				sqr_dist = pow(voxels.at(i).x-voxels.at(j).x,2) + \
+				     	   pow(voxels.at(i).y-voxels.at(j).y,2) + \
+						   pow(voxels.at(i).z-voxels.at(j).z,2);
 
 				// voxels.at(i)=p1, voxels.at(j)=p2
 				if (sqr_dist<= (pow(voxels.at(0).width(),2)-0.0001)){
@@ -175,6 +176,9 @@ void initiateVelocities( std::vector<Voxel> voxels, std::vector<Vector> &voxelVe
 	voxel_quantity=0;
 }
 
+
+
+//------------ buckets ----------------
 void checkVoxelCollisionsInBuckets( std::vector< Voxel> &voxels, std::vector< Vector> &voxelVelocity){
 	//StartCounter();
 	//============= setup Buckets ================
@@ -210,7 +214,6 @@ void checkVoxelCollisionsInBuckets( std::vector< Voxel> &voxels, std::vector< Ve
 		row = (voxels.at(i).x+10)/bwidth-1;
 		col = (voxels.at(i).y+100)/bwidth+1;
 
-		int pos = row*columns+col;
 		buckets.at( row*columns+col).insert( buckets.at( columns*row+col).end(), voxels.at(i));
 		buck_velocities.at( row*columns+col).insert( buck_velocities.at( columns*row+col).end(), voxelVelocity.at(i));
 		//buckets.insert( buckets.begin(), row*columns+col, voxels.at(i))
@@ -218,9 +221,7 @@ void checkVoxelCollisionsInBuckets( std::vector< Voxel> &voxels, std::vector< Ve
 
 
 	//======= check which buckets have to be checked for collisions =======
-	StartCounter();
 
-	int buck_size = int(buckets.size());
 	for (int i=0; i<int(buckets.size()); i++){
 		int b=i;
 
@@ -282,7 +283,7 @@ void checkVoxelCollisionsInBuckets( std::vector< Voxel> &voxels, std::vector< Ve
 			}
 		}
 	}
-    printf( " %f \n", GetCounter());
+    //printf( " %f \n", GetCounter());
 }
 
 void checkVoxelCollision( Vector &vel1, Vector &vel2, Voxel &vox1, Voxel &vox2){
@@ -296,7 +297,7 @@ void checkVoxelCollision( Vector &vel1, Vector &vel2, Voxel &vox1, Voxel &vox2){
 					
 	// voxels.at(i)=p1, voxels.at(j)=p2
 	if (sqr_dist<= (pow(vox1.width(),2)-0.0001)){
-		float dist = sqrt( sqr_dist);
+		dist = sqrt( sqr_dist);
 
 		normal.insert( vox2.x-vox1.x, vox2.y-vox1.y, vox2.z-vox1.z); 
 		normal.insert( normal.x/ dist, normal.y/ dist, normal.z/ dist);
@@ -316,13 +317,3 @@ void checkVoxelCollision( Vector &vel1, Vector &vel2, Voxel &vox1, Voxel &vox2){
 	}
 }
 
-//============ write to file ===========
-//void writeToFile(std::stringstream& ss){  
-//    using namespace std;  
-//    string myString = ss.str();  
-//    FILE * myfile;  
-//	myfile = fopen("voxel_coords.txt", "a");  
-//    //myfile << myString;  
-//    fprintf( myfile, myString);
-//	myfile.close();  
-//}  

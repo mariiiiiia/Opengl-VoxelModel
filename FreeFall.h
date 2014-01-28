@@ -11,7 +11,7 @@ void drawSphereVoxels(std::vector<Voxel> voxels);
 
 void freeFallOfVoxels( std::vector<Voxel> &voxels, std::vector<Vector> &voxelVelocity, std::vector< std::vector<Voxel>> &voxel_data, float dt);
 
-void checkFloorCollisions( std::vector<Voxel> &voxels, std::vector<Vector> &voxelVelocity, float floor_coord_y);
+void checkFloorCollisions( std::vector<Voxel> &voxels, std::vector<Vector> &voxelVelocity, float tx, float ty, float tz, float dt);
 
 void checkVoxelCollisions( std::vector<Voxel> &voxels, std::vector<Vector> &voxelVelocity);
 

@@ -21,7 +21,7 @@ void showObj(const std::vector<Point> &vert,const std::vector<Triangle> &tr, boo
 	float theta1,phi1,theta2,phi2,theta3,phi3;
 
 	if (solid){														// solid rendering
-		for (int i=0; i<tr.size(); i++)								
+		for (int i=0; i<int(tr.size()); i++)								
 		{
 			if (texture!= NULL){				// body texture
 				//glColor4f(0.5,0.5,0.6,1.0);
@@ -80,7 +80,7 @@ void showObj(const std::vector<Point> &vert,const std::vector<Triangle> &tr, boo
 		}
 	}
 	else if (wireframe){												// wireframe rendering
-		for (int i=0; i<tr.size(); i++)
+		for (int i=0; i<int(tr.size()); i++)
 		{
 			glBegin(GL_LINES);
 				glNormal3f(vertNormal.at(tr.at(i).p1).x, vertNormal.at(tr.at(i).p1).y, vertNormal.at(tr.at(i).p1).z);

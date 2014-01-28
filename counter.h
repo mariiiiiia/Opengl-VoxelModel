@@ -1,0 +1,3 @@
+void StartCounter();
+
+double GetCounter();

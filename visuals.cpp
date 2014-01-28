@@ -1,7 +1,6 @@
 #include <stdio.h>     // - Just for some ASCII messages
-#include <array>
 #include <vector>
-#include <string.h>
+#include <map>
 #include <math.h>
 #include "gl/glut.h"   // - An interface and windows management library
 #include "structs.h"
@@ -11,7 +10,8 @@
 #include "soil/SOIL.h"
 #include "voxelModel.h"
 #include "FreeFall.h"
-#include <windows.h>
+#include "triangulateVoxelModel.h"
+#include "counter.h"
 
 
 static std::vector<Triangle> hornTriangles;
@@ -26,233 +26,244 @@ static int incr_scale = 0, decr_scale=0;
 //-------------- variables for moving/rotatin ---------------
 static float tx = 0.0, ty=0.0, tz=0.0;
 static float rotx = 0.0, roty=0.0, rotz=0.0;
-
 //------------- variables for object rendering and lights -----------
 static bool solid=true, wireframe=false;
 static bool light1_state = false, light2_state = false;
 static float light1_x=0, light1_y=-1, light1_z=0,light2_x=0, light2_y=-1, light2_z=0;
 static float light_angle=0.03;
-
 //------ normals -------------
 std::vector<Vector> normal;      // normal per face
 std::vector<Vector> vertNormal;  // normal per vertice
-
 //---------- TEXTURES ------------------
 static int horseTexture, hornTexture, handTexture, floorTexture;
 static int backgroundTexture1, backgroundTexture2;
-
 //---------- load object ------
 static bool load_obj = true;
 //---------- voxel model -------
 static bool voxel_model=false, test_voxel=false;
-static float voxel_width=1.0;
 //--------- free fall ---------
 static bool sphere_voxels=false, free_fall=false;
 static float dt=0.01;
 static bool rewind_free_fall=false;
 static std::vector< std::vector<Voxel>> voxel_data;
-//---------- check collisions ------
-float floor_coord_y=-10;
-
+//--------- retriangulate mesh -----
+static bool retriangulate=false;
 
 void Render()
 {    
-  //CLEARS FRAME BUFFER ie COLOR BUFFER& DEPTH BUFFER (1.0)
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  // Clean up the colour of the window
-													   // and the depth buffer
-  glMatrixMode(GL_MODELVIEW); 
-  glLoadIdentity();
+
+	//CLEARS FRAME BUFFER ie COLOR BUFFER& DEPTH BUFFER (1.0)
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  // Clean up the colour of the window
+														   // and the depth buffer
+	glMatrixMode(GL_MODELVIEW); 
+	glLoadIdentity();
   
-  //----- select which object will be loaded and calculate its normals-------
- // if (obj_file == "objects/unicorn_low.obj" && load_obj==true){
-  if (load_obj==true){
-	  loadObj(obj_file, vertices, triangles, hornTriangles);
+	//----- select which object will be loaded and calculate its normals-------
+	// if (obj_file == "objects/unicorn_low.obj" && load_obj==true){
+	if (load_obj==true){
+		loadObj(obj_file, vertices, triangles, hornTriangles);
 	  
-	  normal.clear();
-	  for (int i=0; i<int(triangles.size()); i++)
-	  {
-		  Vector n;
+		normal.clear();
+		for (int i=0; i<int(triangles.size()); i++){
+			Vector n;
 
-		  n = CalcNormal( triangles.at(i) );
-		  normal.push_back( n );
-	  }
+			n = CalcNormal( triangles.at(i) );
+			normal.push_back( n );
+		}
 
-	  avgNormals(triangles, vertices);
-	  load_obj=false;
-  }
+		avgNormals(triangles, vertices);
+		load_obj=false;
+	}
+	//glTranslatef(0,0,-40);
+	//-------draw background------
+	setRoom();
 
-  //-------draw background------
-  setRoom();
+	//---- bring object at the center of the window so we can see it -----------
+	glTranslatef(0,0,-40);
+	//---------------------------------------------------------
 
-  //---- bring object at the center of the window so we can see it -----------
-  glTranslatef(0,0,-40);
-  //---------------------------------------------------------
+	//---------- RENDER OBJECT ----------------
+	glPushMatrix();
+	if (!voxel_model && !sphere_voxels && !free_fall && !rewind_free_fall && !retriangulate){
+		glTranslatef(tx,ty,tz);
 
-  //---------- RENDER OBJECT ----------------
-  glPushMatrix();
-  if (voxel_model==false && sphere_voxels==false && free_fall==false && rewind_free_fall==false){
-		  glTranslatef(tx,ty,tz);
-
-		  glRotatef(rotx,1,0,0);
-		  glRotatef(roty,0,1,0);
-		  glRotatef(rotz,0,0,1);
-
-		  glScalef( scalex, scaley, scalez);
-
-		  if (obj_file=="objects/unicorn_low.obj"){
-			  glColor4f(1,1,1,1.0);
-			  glMateriali(GL_FRONT,GL_SHININESS,30);
-			  showObj(vertices, triangles, solid, wireframe, vertNormal, horseTexture);
-			  glColor4f(1,1,1,1.0);
-			  glMateriali(GL_FRONT,GL_SHININESS,128);
-			  showObj(vertices, hornTriangles, solid, wireframe, vertNormal, hornTexture);
-		  }
-		  else if (obj_file=="objects/hand.obj"){
-			  glColor4f(1,1,1,1.0);
-			  glMateriali(GL_FRONT,GL_SHININESS,60);
-			  showObj(vertices, triangles, solid, wireframe, vertNormal, handTexture);
-		  }
-		  else {
-			  glColor4f(1,1,1,1.0);
-			  showObj(vertices, triangles, solid, wireframe, vertNormal, handTexture);		  
-		  }
-	  }
-  glPopMatrix();
-
-  //-------- draw spheres for light --------
-  if (light1_state==true){
-	  glPushMatrix();
-		  glColor3f( 0.1, 0.8, 0.0);
-		  glTranslatef(-8,5,10);
-		  glutSolidSphere(0.5,20,20);
-	  glPopMatrix();}
-
-  if (light2_state==true){
-	  glPushMatrix();
-		  glColor3f( 1.0, 0.0, 0.0);
-		  glTranslatef(8,5,10);
-		  glutSolidSphere(0.5,20,20);
-	  glPopMatrix();}
-
-  //--------------------- VOXELIZE -----------------------
-  if ((voxel_model==true || sphere_voxels==true || free_fall==true) && test_voxel==false) {
-	  setVoxels( voxels, vertices, triangles, normal, voxel_width);
-	  if ( obj_file=="objects/unicorn_low.obj") setVoxels( voxels, vertices, hornTriangles, normal, voxel_width);
-  }
-  //-------------------- SHOW VOXEL MODEL -----------------
-  if (voxel_model==true){
-	  glPushMatrix();
-		  glTranslatef(tx,ty,tz);
-
-		  glRotatef(rotx,1,0,0);
-		  glRotatef(roty,0,1,0);
-		  glRotatef(rotz,0,0,1);
-
-		  glScalef( scalex, scaley, scalez);
-
-		  if (test_voxel==false){
-			  drawVoxel(voxels, voxel_width);
-		  }
-		  // test voxelization
-		  else {
-			  	glColor4f( 1,0,0.5, 1.0);
-	
-				Triangle triangle;
-				triangle.p1 = 1;
-				triangle.p2 = 3; 
-				triangle.p3 = 2;
-
-				std::vector<Triangle> test_triangle;
-				test_triangle.push_back( triangle);
-
-				Point p1,p2,p3;
-				p1.insert( vertices.at(triangle.p1).x, vertices.at(triangle.p1).y, vertices.at(triangle.p1).z); 
-				p2.insert( vertices.at(triangle.p2).x, vertices.at(triangle.p2).y, vertices.at(triangle.p2).z); 
-				p3.insert( vertices.at(triangle.p3).x, vertices.at(triangle.p3).y, vertices.at(triangle.p3).z);
+		glRotatef(rotx,1,0,0);
+		glRotatef(roty,0,1,0);
+		glRotatef(rotz,0,0,1);
 		
-				glBegin( GL_TRIANGLES);
-				glVertex3f( p1.x,p1.y,p1.z); glVertex3f( p2.x,p2.y,p2.z); glVertex3f(p3.x, p3.y,p3.z);
-				glEnd();
-				glBegin( GL_TRIANGLES);
-				glVertex3f( p1.x,p1.y,p1.z); glVertex3f( p3.x,p3.y,p3.z); glVertex3f(p2.x, p2.y,p2.z);
-				glEnd();
+		glScalef( scalex, scaley, scalez);
 
-				Vector norm;
-				std::vector<Vector> test_normal;
-				norm = CalcNormal( triangle);
-				test_normal.push_back( norm);
+		if (obj_file=="objects/unicorn_low.obj"){
+			glColor4f(1,1,1,1.0);
+			glMateriali(GL_FRONT,GL_SHININESS,30);
+			showObj(vertices, triangles, solid, wireframe, vertNormal, horseTexture);
+			glColor4f(1,1,1,1.0);
+			glMateriali(GL_FRONT,GL_SHININESS,128);
+			showObj(vertices, hornTriangles, solid, wireframe, vertNormal, hornTexture);
+		}
+		else if (obj_file=="objects/hand.obj"){
+			glColor4f(1,1,1,1.0);
+			glMateriali(GL_FRONT,GL_SHININESS,60);
+			showObj(vertices, triangles, solid, wireframe, vertNormal, handTexture);
+		}
+		else {
+			glColor4f(1,1,1,1.0);
+			showObj(vertices, triangles, solid, wireframe, vertNormal, handTexture);		  
+		}
+	}
+	glPopMatrix();
+
+	//-------- draw spheres for light --------
+	if (light1_state==true){
+		glPushMatrix();
+		glColor3f( 0.1, 0.8, 0.0);
+		glTranslatef(-8,5,10);
+		glutSolidSphere(0.5,20,20);
+		glPopMatrix();}
+
+	if (light2_state==true){
+		glPushMatrix();
+		glColor3f( 1.0, 0.0, 0.0);
+		glTranslatef(8,5,10);
+		glutSolidSphere(0.5,20,20);
+		glPopMatrix();}
+
+	//======================= VOXEL MODEL =======================================
+	//--------------- set voxels -----------------------------------------------
+	if ((voxel_model==true || sphere_voxels==true || free_fall==true) && test_voxel==false) {
+		setVoxels( voxels, vertices, triangles, normal);	}
+	//-------------------- SHOW VOXEL MODEL -----------------
+	if (voxel_model && !retriangulate){
+		glPushMatrix();
+		glTranslatef(tx,ty,tz);
+		
+		glRotatef(rotx,1,0,0);
+		glRotatef(roty,0,1,0);
+		glRotatef(rotz,0,0,1);
+
+		glScalef( scalex, scaley, scalez);
+
+		if (test_voxel==false){
+			drawVoxel(voxels, voxels.at(0).width());
+		}
+		// test voxelization
+		else {
+			glColor4f( 1,0,0.5, 1.0);
+	
+			Triangle triangle;
+			triangle.p1 = 1;
+			triangle.p2 = 3; 
+			triangle.p3 = 2;
+
+			std::vector<Triangle> test_triangle;
+			test_triangle.push_back( triangle);
+
+			Point p1,p2,p3;
+			p1.insert( vertices.at(triangle.p1).x, vertices.at(triangle.p1).y, vertices.at(triangle.p1).z); 
+			p2.insert( vertices.at(triangle.p2).x, vertices.at(triangle.p2).y, vertices.at(triangle.p2).z); 
+			p3.insert( vertices.at(triangle.p3).x, vertices.at(triangle.p3).y, vertices.at(triangle.p3).z);
+		
+			glBegin( GL_TRIANGLES);
+			glVertex3f( p1.x,p1.y,p1.z); glVertex3f( p2.x,p2.y,p2.z); glVertex3f(p3.x, p3.y,p3.z);
+			glEnd();
+			glBegin( GL_TRIANGLES);
+			glVertex3f( p1.x,p1.y,p1.z); glVertex3f( p3.x,p3.y,p3.z); glVertex3f(p2.x, p2.y,p2.z);
+			glEnd();
+
+			Vector norm;
+			std::vector<Vector> test_normal;
+			norm = CalcNormal( triangle);
+			test_normal.push_back( norm);
 				
-				setVoxels( voxels, vertices, test_triangle, test_normal, voxel_width);
-				drawVoxel( voxels,voxel_width);
-			}
-      glPopMatrix();
-  }
+			setVoxels( voxels, vertices, test_triangle, test_normal);
+			drawVoxel( voxels,voxels.at(0).width());
+		}
+		glPopMatrix();
+	}
 
-  //---------------- SHOW SPHERE VOXELS or LET THEM FALL -----------
-  if (sphere_voxels==true || free_fall==true){
-	  glPushMatrix();
-	  glTranslatef(tx,ty,tz);
+	//---------------- JUST SHOW SPHERE VOXELS or LET THEM FALL FREE -----------
+	if (sphere_voxels==true || free_fall==true){
+		glPushMatrix();
+		glTranslatef(tx,ty,tz);
 
-	  glRotatef(rotx,1,0,0);
-	  glRotatef(roty,0,1,0);
-	  glRotatef(rotz,0,0,1);
+		glRotatef(rotx,1,0,0);
+		glRotatef(roty,0,1,0);
+		glRotatef(rotz,0,0,1);
 
-	  glScalef( scalex, scaley, scalez);
+		glScalef( scalex, scaley, scalez);
 
-	  drawSphereVoxels( voxels );
-	  glPopMatrix();
-  }
-  else if (rewind_free_fall){
-	  if (voxel_data.size()>1) {
-		  glPushMatrix();
-		  glTranslatef(tx,ty,tz);
+		drawSphereVoxels( voxels );
+		glPopMatrix();
+	}
+	//----------------- REWIND FREE FALLING -----------------
+	else if (rewind_free_fall){
+		if (voxel_data.size()>1) {
+			glPushMatrix();
+			glTranslatef(tx,ty,tz);
 
-	      glRotatef(rotx,1,0,0);
-		  glRotatef(roty,0,1,0);
-		  glRotatef(rotz,0,0,1);
+			glRotatef(rotx,1,0,0);
+			glRotatef(roty,0,1,0);
+			glRotatef(rotz,0,0,1);
 
-		  glScalef( scalex, scaley, scalez);
+			glScalef( scalex, scaley, scalez);
 		  
-		  drawSphereVoxels( voxel_data.back());
-		  voxel_data.pop_back();
-		  //Sleep(10);
-		  glPopMatrix();
-	  }
-	  else {
-		  glPushMatrix();
-		  glTranslatef(tx,ty,tz);
+			drawSphereVoxels( voxel_data.back());
+			voxel_data.pop_back();
+			glPopMatrix();
+		}
+		else {
+			glPushMatrix();
+			glTranslatef(tx,ty,tz);
 
-	      glRotatef(rotx,1,0,0);
-		  glRotatef(roty,0,1,0);
-		  glRotatef(rotz,0,0,1);
+			glRotatef(rotx,1,0,0);
+			glRotatef(roty,0,1,0);
+			glRotatef(rotz,0,0,1);
 
-		  glScalef( scalex, scaley, scalez);
+			glScalef( scalex, scaley, scalez);
 		  
-		  drawSphereVoxels( voxel_data.back());
-		  voxels.clear();
-		  //initiateVelocities( voxels, voxelVelocity);
-		  glPopMatrix();
-	  }
-  }
+			drawSphereVoxels( voxel_data.back());
+			voxels.clear();
+			//initiateVelocities( voxels, voxelVelocity);
+			glPopMatrix();
+		}
+	}
 
-  glutSwapBuffers();             // All drawing commands applied to the 
-                                 // hidden buffer, so now, bring forward
-                                 // the hidden buffer and hide the visible one
+	//============= RETRIANGULATE MESH THROUGH VOXEL DATA =========
+	if (retriangulate)	{
+		glPushMatrix();
+			glTranslatef(tx,ty,tz);
+
+			glRotatef(rotx,1,0,0);
+			glRotatef(roty,0,1,0);
+			glRotatef(rotz,0,0,1);
+
+			glScalef( scalex, scaley, scalez);
+		  
+			triangulateVoxelModel( voxels);
+		glPopMatrix();
+	}
+
+	glutSwapBuffers();             // All drawing commands applied to the 
+									 // hidden buffer, so now, bring forward
+									 // the hidden buffer and hide the visible one
 }
 
 void Idle()
 {
 	if (free_fall==true){		
+		//StartCounter(); 
+
 		// check floor collisions
-		checkFloorCollisions( voxels, voxelVelocity, floor_coord_y-ty);	
+		checkFloorCollisions( voxels, voxelVelocity, tx,ty,tz, dt);	
 
 		//check collisions with each other
 		checkVoxelCollisions( voxels, voxelVelocity);
-
 		//checkVoxelCollisionsInBuckets( voxels, voxelVelocity);
 
 		//simulate free falling
 		freeFallOfVoxels( voxels, voxelVelocity, voxel_data, dt);
+
+		//printf("%f\n", GetCounter());
 	}
 
 	glutPostRedisplay();
@@ -363,10 +374,10 @@ void setRoom()
 	glBindTexture(GL_TEXTURE_2D, floorTexture);
 
 	glBegin(GL_QUADS);		
-		glTexCoord2f(0.0, 1.0); glVertex3f( 100, floor_coord_y, -100);
-		glTexCoord2f(1.0, 1.0); glVertex3f( -100, floor_coord_y, -100);
-		glTexCoord2f(1.0, 0.0); glVertex3f( -100, floor_coord_y, 0);
-		glTexCoord2f(0.0, 0.0); glVertex3f( 100, floor_coord_y, 0);
+		glTexCoord2f(0.0, 1.0); glVertex3f( RIGHT_WALL, FLOOR, FAR_WALL);
+		glTexCoord2f(1.0, 1.0); glVertex3f( LEFT_WALL, FLOOR, FAR_WALL);
+		glTexCoord2f(1.0, 0.0); glVertex3f( LEFT_WALL, FLOOR, NEAR_WALL);
+		glTexCoord2f(0.0, 0.0); glVertex3f( RIGHT_WALL, FLOOR, NEAR_WALL);
 	glEnd();
 
 	glDisable(GL_TEXTURE_2D);
@@ -382,10 +393,10 @@ void setRoom()
 	glBindTexture(GL_TEXTURE_2D, backgroundTexture1);
 
 	glBegin(GL_QUADS);		
-		glTexCoord2f(1.0, 0.0); glVertex3f( -100, floor_coord_y, -100);
-		glTexCoord2f(0.0, 0.0); glVertex3f( 100, floor_coord_y, -100);
-		glTexCoord2f(0.0, 1.0); glVertex3f( 100, floor_coord_y+70, -100);
-		glTexCoord2f(1.0, 1.0); glVertex3f( -100, floor_coord_y+70, -100);
+		glTexCoord2f(1.0, 0.0); glVertex3f( LEFT_WALL, FLOOR, FAR_WALL);
+		glTexCoord2f(0.0, 0.0); glVertex3f( RIGHT_WALL, FLOOR, FAR_WALL);
+		glTexCoord2f(0.0, 1.0); glVertex3f( RIGHT_WALL, FLOOR+70, FAR_WALL);
+		glTexCoord2f(1.0, 1.0); glVertex3f( LEFT_WALL, FLOOR+70, FAR_WALL);
 	glEnd();
 
 	glDisable(GL_TEXTURE_2D);
@@ -399,7 +410,7 @@ void Keyboard(unsigned char key,int x,int y)
 		{
 			if (obj_file=="objects/unicorn_low.obj"){
 				horseTexture = loadTexture("images/horse3.png");
-				hornTexture = loadTexture("images/horn3.png");
+				hornTexture = loadTexture("images/horn2.png");
 			}
 			else if (obj_file=="objects/hand.obj") handTexture = loadTexture("images/hand1.png");
 			break;
@@ -452,6 +463,7 @@ void Keyboard(unsigned char key,int x,int y)
 		case '2': {obj_file = "objects/hand.obj"; load_obj=true; voxels.clear(); break;}
 		case '3': {obj_file = "objects/3D_1.obj"; load_obj=true; voxels.clear(); break;}
 		case '4': {obj_file = "objects/3D_2.obj"; load_obj=true; voxels.clear(); break;}
+		case '5': {obj_file = "objects/head.obj"; load_obj=true; voxels.clear(); break;}
 		//------------ voxelize odr not -------------
 		case 'D': 
 			voxel_model = true; test_voxel = true; voxels.clear(); 
@@ -468,17 +480,29 @@ void Keyboard(unsigned char key,int x,int y)
 			initiateVelocities( voxels, voxelVelocity);
 			break;
 		case 'f': 
-			free_fall = true; rewind_free_fall=false; voxel_model = false; sphere_voxels = false; 
-			initiateVelocities( voxels, voxelVelocity);
+			if ( sphere_voxels){
+				free_fall = true; rewind_free_fall=false; voxel_model = false; sphere_voxels = false; 
+				initiateVelocities( voxels, voxelVelocity);
+			}
 			break;
 		case 'e': 
 			voxel_model = false; sphere_voxels=false; free_fall=false; 
 			voxels.clear();
 			initiateVelocities( voxels, voxelVelocity);
 			break;
-		//====== reverse =======
+		//====== rewind =======
 		case 32:
-			rewind_free_fall = true; free_fall=false; voxel_model = false; sphere_voxels=false;
+			if ( free_fall){
+				rewind_free_fall = true; free_fall=false; voxel_model = false; sphere_voxels=false;
+			}
+			break;
+		//======= triangulate voxel model =============
+		case 'j': 
+			if (voxel_model){
+				retriangulate = true;}
+			break;
+		case 'i':
+			retriangulate = false;
 			break;
 		default : break;
 		}	
@@ -659,7 +683,7 @@ void Setup()  // TOUCH IT !!
 	glClearDepth(1);
       
 	//Set up light source
-	GLfloat light_position[] = { 0.0, 20.0, 8.0, 1.0 };
+	GLfloat light_position[] = { 0.0, 0.0, 5.0, 1.0 };
 	GLfloat specularLight[] = { 1.0f, 1.0f, 1.0f, 1.0 };
 	GLfloat ambientLight[] = { 0.3f, 0.3f, 0.3f, 1.0 };
 	GLfloat diffuseLight[] = { 0.8f, 0.8f, 0.8f, 1.0 };
@@ -672,7 +696,7 @@ void Setup()  // TOUCH IT !!
 	glEnable(GL_LIGHT0);
 
 	// material identities
-	float specReflection[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	float specReflection[] = { 0.8f, 0.8f, 0.8f, 1.0f };
 	float ambReflection[] = { 0.5, 0.5, 0.5, 1.0f };
 	float diffReflection[] = { 0.5, 0.5, 0.5, 1.0f };
 	glMaterialfv(GL_FRONT, GL_SPECULAR, specReflection);

@@ -1,3 +1,10 @@
+#define VOXEL_WIDTH 0.8
+#define FLOOR -10
+#define LEFT_WALL -40
+#define RIGHT_WALL 40
+#define FAR_WALL -60
+#define NEAR_WALL 0
+
 class Point{
 public:
 	float x;
@@ -15,12 +22,12 @@ public:
 		else return false;
 	}
 
-	bool comparisonGreater(Point p){
+	bool operator>(Point p){
 		if (this->x>p.x && this->y>p.y && this->z>p.z) return true;
 		else return false;
 	}
 	
-	bool comparisonLower(Point p){
+	bool operator<(Point p){
 		if (this->x<p.x && this->y<p.y && this->z<p.z) return true;
 		else return false;
 	}
@@ -67,12 +74,12 @@ public:
 		return cp;
 	}
 
-	bool comparisonGreaterOrEqual(Vector v){
+	bool operator>=(Vector v){
 		if (this->x>=v.x && this->y>=v.y && this->z>=v.z) return true;
 		else return false;
 	}
 	
-	bool comparisonLowerOrEqual(Vector v){
+	bool operator<=(Vector v){
 		if (this->x<=v.x && this->y<=v.y && this->z<=v.z) return true;
 		else return false;
 	}
@@ -86,15 +93,15 @@ class Triangle {
 		int p3;
 };
 
-class Voxel{
+class Voxel : public Point
+{
 public:
-	float x;
-	float y;
-	float z;
+//	float x;
+//	float y;
+//	float z;
 
-	float width(){
-		float voxel_width=1.0;
-		return voxel_width;
+	static inline float width(){
+		return VOXEL_WIDTH;
 	}
 
 	void insert(float x, float y, float z){
@@ -103,10 +110,15 @@ public:
 		this->z=z;
 	}
 
-	bool equals( Point p){
-		if (this->x==p.x && this->y==p.y && this->z==p.z) return true;
-		else return false;
-	}
+	// voxel == point
+	//bool operator==(const Point &p) {
+	//	return equals(p);
+	//}
+
+	//bool equals(const Point &p){
+	//	if (this->x==p.x && this->y==p.y && this->z==p.z) return true;
+	//	else return false;
+	//}
 
 	bool equals( Voxel v){
 		if (this->x==v.x && this->y==v.y && this->z==v.z) return true;
