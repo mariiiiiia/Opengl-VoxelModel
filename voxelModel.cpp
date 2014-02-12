@@ -256,33 +256,61 @@ void VoxelModel::triangleVoxelization( std::vector< Point> vert, Triangle tr, Ve
 					// NOW WE KNOW THE CUBE IS AT THE TRIANGLE'S PLANE
 					// WE NEED TO CHECK IF THE CUBE IS INSIDE THE TRIANGLE 
 					
-					cp.insert( cube1.x+d/2, cube1.y+d/2, cube1.z-d/2);
+					Point null, interp;
+					std::vector< Point> interpoints;
 
-					if ( checkLineTriangleIntersection( tri, normal, cube1, cube2) ||   //edge1
-					     checkLineTriangleIntersection( tri, normal, cube2, cube3) ||	//edge2
-						 checkLineTriangleIntersection( tri, normal, cube3, cube4) ||	//edge3
-					     checkLineTriangleIntersection( tri, normal, cube4, cube1) ||	//edge4
-						 checkLineTriangleIntersection( tri, normal, cube5, cube6) ||	//edge5
-						 checkLineTriangleIntersection( tri, normal, cube6, cube7) ||	//edge6
-						 checkLineTriangleIntersection( tri, normal, cube7, cube8) ||	//edge7 
-						 checkLineTriangleIntersection( tri, normal, cube8, cube5) ||	//edge8
-						 checkLineTriangleIntersection( tri, normal, cube1, cube5) ||	//edge9
-						 checkLineTriangleIntersection( tri, normal, cube4, cube6) ||	//edge10
-						 checkLineTriangleIntersection( tri, normal, cube3, cube7) ||	//edge11
-						 checkLineTriangleIntersection( tri, normal, cube2, cube8) || 	//edge12
-						 checkLineTriangleIntersection( tri, normal, cube1, cube7) ||
-						 checkLineTriangleIntersection( tri, normal, cube2, cube6) ||
-						 checkLineTriangleIntersection( tri, normal, cube4, cube8) ||
-						 checkLineTriangleIntersection( tri, normal, cube5, cube3) 
-						 ) {
+					cp.insert( cube1.x+d/2, cube1.y+d/2, cube1.z-d/2);
+					null.insert( 100,100,100);
+					for (int m=0; m<12; m++){
+						interpoints.push_back( null);
+					}
+
+					//if ( checkLineTriangleIntersection( tri, normal, cube1, cube2, interpoints.at(0)) ||   //edge1
+					//     checkLineTriangleIntersection( tri, normal, cube2, cube3, interpoints.at(1)) ||	//edge2
+					//	 checkLineTriangleIntersection( tri, normal, cube3, cube4, interpoints.at(2)) ||	//edge3
+					//     checkLineTriangleIntersection( tri, normal, cube4, cube1, interpoints.at(3)) ||	//edge4
+					//	 checkLineTriangleIntersection( tri, normal, cube5, cube6, interpoints.at(4)) ||	//edge5
+					//	 checkLineTriangleIntersection( tri, normal, cube6, cube7, interpoints.at(5)) ||	//edge6
+					//	 checkLineTriangleIntersection( tri, normal, cube7, cube8, interpoints.at(6)) ||	//edge7 
+					//	 checkLineTriangleIntersection( tri, normal, cube8, cube5, interpoints.at(7)) ||	//edge8
+					//	 checkLineTriangleIntersection( tri, normal, cube1, cube5, interpoints.at(8)) ||	//edge9
+					//	 checkLineTriangleIntersection( tri, normal, cube4, cube6, interpoints.at(9)) ||	//edge10
+					//	 checkLineTriangleIntersection( tri, normal, cube3, cube7, interpoints.at(10)) ||	//edge11
+					//	 checkLineTriangleIntersection( tri, normal, cube2, cube8, interpoints.at(11)) || 	//edge12
+					//	 checkLineTriangleIntersection( tri, normal, cube1, cube7, interp) ||
+					//	 checkLineTriangleIntersection( tri, normal, cube2, cube6, interp) ||
+					//	 checkLineTriangleIntersection( tri, normal, cube4, cube8, interp) ||
+					//	 checkLineTriangleIntersection( tri, normal, cube5, cube3, interp) 
+					//	 ) {
+					bool b1,b2,b3,b4,b5,b6,b7,b8,b9,b10,b11,b12,b13,b14,b15,b16;
+					b1 = checkLineTriangleIntersection( tri, normal, cube1, cube2, interpoints.at(0));   //edge1
+					b2 = checkLineTriangleIntersection( tri, normal, cube2, cube3, interpoints.at(1));	//edge2
+					b3 = checkLineTriangleIntersection( tri, normal, cube3, cube4, interpoints.at(2));	//edge3
+					b4 = checkLineTriangleIntersection( tri, normal, cube4, cube1, interpoints.at(3));	//edge4
+					b5 = checkLineTriangleIntersection( tri, normal, cube5, cube6, interpoints.at(4));	//edge5
+					b6 = checkLineTriangleIntersection( tri, normal, cube6, cube7, interpoints.at(5));	//edge6
+					b7 = checkLineTriangleIntersection( tri, normal, cube7, cube8, interpoints.at(6));	//edge7 
+					b8 = checkLineTriangleIntersection( tri, normal, cube8, cube5, interpoints.at(7));	//edge8
+					b9 = checkLineTriangleIntersection( tri, normal, cube1, cube5, interpoints.at(8));	//edge9
+					b10= checkLineTriangleIntersection( tri, normal, cube4, cube6, interpoints.at(9));	//edge10
+					b11= checkLineTriangleIntersection( tri, normal, cube3, cube7, interpoints.at(10));	//edge11
+					b12= checkLineTriangleIntersection( tri, normal, cube2, cube8, interpoints.at(11)); 	//edge12
+					b13= checkLineTriangleIntersection( tri, normal, cube1, cube7, interp);
+					b14= checkLineTriangleIntersection( tri, normal, cube2, cube6, interp);
+					b15= checkLineTriangleIntersection( tri, normal, cube4, cube8, interp);
+					b16= checkLineTriangleIntersection( tri, normal, cube5, cube3, interp); 
+
+					if ( b1 || b2  || b3  || b4  || b5  || b6  || b7  || b8  || b9  || b10  || b11  || b12  || b13  || b14  || b15  || b16){
 							 //===================== INSERT VOXEL TO LIST =====================================//
 							 Voxel vox;
 							 vox.insert(cube1.x+d/2, cube1.y+d/2, cube1.z-d/2);
 
-							 if ( !this->voxelAlreadyExists( vox, tr )){
+							 int vox_pos;
+							 if ( !this->voxelAlreadyExists( vox, vox_pos)){
 								 this->voxels.push_back(vox);
 								 //==================== INSERT MARCHING CUBE TO LIST ================================//
 								 MarchingCube march_cube;
+
 								 march_cube.set( vox);
 								 this->mc.push_back(march_cube);
 
@@ -296,6 +324,19 @@ void VoxelModel::triangleVoxelization( std::vector< Point> vert, Triangle tr, Ve
 								 this->mc.at( voxels.size()-1).turnCornerOnOrOff( 8, dotpr8>0);
 
 								 this->mc.at( mc.size()-1).tr.push_back( tr); 
+
+								 for (int m=0; m<12; m++){
+									 this->mc.at( mc.size()-1).intersection_points.push_back( interpoints.at(m));
+								 }
+
+							 }
+							 else {
+								 this->mc.at( vox_pos).tr.push_back( tr);
+								 for (int m=0; m<12; m++){
+									 if ( !interpoints.at(m).equals( null)){
+										 this->mc.at( vox_pos).intersection_points.at(m).insert( interpoints.at(m));
+									 }
+								 }
 							 }
 					}
 				}
@@ -304,12 +345,13 @@ void VoxelModel::triangleVoxelization( std::vector< Point> vert, Triangle tr, Ve
 	}
 }
 
-bool checkLineTriangleIntersection( TriangleCoord tri, Vector normal, Point lp1, Point lp2){
+bool checkLineTriangleIntersection( TriangleCoord tri, Vector normal, Point lp1, Point lp2, Point &interpoint){
 	Point tp1, tp2, tp3;
 	tp1.insert(tri.p1);
 	tp2.insert(tri.p2);
 	tp3.insert(tri.p3);
 
+	interpoint.insert( 100, 100, 100);
 	// plane equation: Ax+By+Cz=D
 	// compute triangle vectors
 	Vector ab,bc,ca,ac, line_dir;
@@ -370,15 +412,21 @@ bool checkLineTriangleIntersection( TriangleCoord tri, Vector normal, Point lp1,
 
 
 	if (line_dir.y!=0){
-		if ( (interp.y<=lp1.y && interp.y>=lp2.y) || (interp.y>=lp1.y && interp.y<=lp2.y) ) return true;
+		if ( (interp.y<=lp1.y && interp.y>=lp2.y) || (interp.y>=lp1.y && interp.y<=lp2.y) ) {
+			interpoint.insert( interp);
+			return true;}
 		else return false;		
 	}
 	if (line_dir.z!=0){
-		if ( (interp.z<=lp1.z && interp.z>=lp2.z) || (interp.z>=lp1.z && interp.z<=lp2.z) ) return true;
+		if ( (interp.z<=lp1.z && interp.z>=lp2.z) || (interp.z>=lp1.z && interp.z<=lp2.z) ) {
+			interpoint.insert( interp);
+			return true;}
 		else return false;		
 	}
 	if (line_dir.x!=0){
-		if ( (interp.x<=lp1.x && interp.x>=lp2.x) || (interp.x>=lp1.x && interp.x<=lp2.x) ) return true;
+		if ( (interp.x<=lp1.x && interp.x>=lp2.x) || (interp.x>=lp1.x && interp.x<=lp2.x) ) {
+			interpoint.insert( interp);
+			return true;}
 		else return false;		
 	}
 
@@ -388,13 +436,15 @@ bool checkLineTriangleIntersection( TriangleCoord tri, Vector normal, Point lp1,
 	//glVertex3f( interp.x+0.1, interp.y, interp.z);
 	//glVertex3f( interp.x, interp.y+0.1, interp.z);
 	//glEnd();
+	//interpoint.insert( interp);
+	//return true;
 	return false;
 }
 
-bool VoxelModel::voxelAlreadyExists(Voxel vox, Triangle tr){
+bool VoxelModel::voxelAlreadyExists(Voxel vox, int &voxpos){
 	for (int i=0; i<int(this->voxels.size()); i++){
 		if ( voxels.at(i).equals( vox )) {
-			this->mc.at(i).tr.push_back( tr);
+			voxpos=i;
 			return true;
 		}
 	}

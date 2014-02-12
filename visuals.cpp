@@ -89,7 +89,7 @@ void Render()
 		
 	glScalef( scalex, scaley, scalez);
 	//---------- RENDER OBJECT ----------------
-	if ( !voxel_model_state && !sphere_voxels && !free_fall && !rewind_free_fall && !retriangulate){
+	if ( !sphere_voxels && !free_fall && !rewind_free_fall && !retriangulate){
 		if (obj_file=="objects/unicorn_low.obj"){
 			glColor4f(1,1,1,1.0);
 			glMateriali(GL_FRONT,GL_SHININESS,51.2);
@@ -123,6 +123,7 @@ void Render()
 			glColor4f( 1,0,0.5, 1.0);
 	
 			triangles.clear();
+			hornTriangles.clear();
 			Triangle test_triangle;
 			test_triangle.p1 = 1;
 			test_triangle.p2 = 3; 

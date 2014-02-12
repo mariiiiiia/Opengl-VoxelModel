@@ -32,11 +32,11 @@ public:
 	void triangleVoxelization( std::vector< Point> vert, Triangle tr, Vector normal, float d);
 	// given a triangle and its normal vector, this function voxelizes the triangle. The function uses the 8 points of the bounding box of the triangle.
 
-	bool voxelAlreadyExists(Voxel vox, Triangle tr);
+	bool voxelAlreadyExists(Voxel vox, int &voxpos);
 
 };
 
-bool checkLineTriangleIntersection( TriangleCoord tri, Vector normal, Point lp1, Point lp2);
+bool checkLineTriangleIntersection( TriangleCoord tri, Vector normal, Point lp1, Point lp2, Point &interpoint);
 	// this function takes as arguments 3 points of a triangle,its normal vector and a point. 
 	//This point lp is one of the 8 points of a cube that we want to define if it is voxel or not. 
 

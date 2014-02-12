@@ -329,19 +329,19 @@ void marchingCubes( VoxelModel &voxmod, std::vector< Point> vertices, std::vecto
 			float d=VOXEL_WIDTH;
 			cb.insert( voxmod.mc.at(i).x-d/2, voxmod.mc.at(i).y-d/2, voxmod.mc.at(i).z+d/2);								//cube0
 			cube.push_back( cb);
-			cb.insert( voxmod.mc.at(i).x-d/2+ VOXEL_WIDTH, voxmod.mc.at(i).y-d/2, voxmod.mc.at(i).z+d/2);				//cube1
+			cb.insert( voxmod.mc.at(i).x+d/2, voxmod.mc.at(i).y-d/2, voxmod.mc.at(i).z+d/2);				//cube1
 			cube.push_back( cb);
-			cb.insert( voxmod.mc.at(i).x-d/2+ VOXEL_WIDTH, voxmod.mc.at(i).y-d/2+ VOXEL_WIDTH, voxmod.mc.at(i).z+d/2);	//cube2
+			cb.insert( voxmod.mc.at(i).x+d/2, voxmod.mc.at(i).y+d/2, voxmod.mc.at(i).z+d/2);	//cube2
 			cube.push_back( cb);
-			cb.insert( voxmod.mc.at(i).x-d/2, voxmod.mc.at(i).y-d/2+ VOXEL_WIDTH, voxmod.mc.at(i).z+d/2);				//cube3
+			cb.insert( voxmod.mc.at(i).x-d/2, voxmod.mc.at(i).y+d/2, voxmod.mc.at(i).z+d/2);				//cube3
 			cube.push_back( cb);
-			cb.insert( voxmod.mc.at(i).x-d/2, voxmod.mc.at(i).y-d/2, voxmod.mc.at(i).z+d/2- VOXEL_WIDTH);				//cube4
+			cb.insert( voxmod.mc.at(i).x-d/2, voxmod.mc.at(i).y-d/2, voxmod.mc.at(i).z-d/2);				//cube4
 			cube.push_back( cb);
-			cb.insert( voxmod.mc.at(i).x-d/2+ VOXEL_WIDTH, voxmod.mc.at(i).y-d/2, voxmod.mc.at(i).z+d/2- VOXEL_WIDTH);	//cube5
+			cb.insert( voxmod.mc.at(i).x+d/2, voxmod.mc.at(i).y-d/2, voxmod.mc.at(i).z-d/2);	//cube5
 			cube.push_back( cb);
-			cb.insert( voxmod.mc.at(i).x-d/2+ VOXEL_WIDTH, voxmod.mc.at(i).y-d/2+ VOXEL_WIDTH, voxmod.mc.at(i).z+d/2- VOXEL_WIDTH);  //cube6
+			cb.insert( voxmod.mc.at(i).x+d/2, voxmod.mc.at(i).y+d/2, voxmod.mc.at(i).z-d/2);  //cube6
 			cube.push_back( cb);
-			cb.insert( voxmod.mc.at(i).x-d/2, voxmod.mc.at(i).y-d/2+ VOXEL_WIDTH, voxmod.mc.at(i).z+d/2- VOXEL_WIDTH);	//cube7
+			cb.insert( voxmod.mc.at(i).x-d/2, voxmod.mc.at(i).y+d/2, voxmod.mc.at(i).z-d/2);	//cube7
 			cube.push_back( cb);
 
 			int corner_index = constructCornerIndex( voxmod.mc.at(i));
@@ -352,16 +352,16 @@ void marchingCubes( VoxelModel &voxmod, std::vector< Point> vertices, std::vecto
 			if (corner_index==0) printf(" corner_index=0. something wrong with voxel model.\n");
 			
 			// update vertlist
-			listMCIntersectionPoints( edges, vertices, voxmod.mc.at(i).tr, cube, vert_list);
+			//listMCIntersectionPoints( edges, vertices, voxmod.mc.at(i).tr, cube, vert_list);
 			
 
 			/* Create the triangle */
 			for (int j=0; triTable[corner_index][j]!=-1; j+=3) {
 				Point v1,v2,v3;
 				Triangle tri;
-				v1 = vert_list.at( triTable[corner_index][j  ]);
-				v2 = vert_list.at( triTable[corner_index][j+1]);
-				v3 = vert_list.at( triTable[corner_index][j+2]);
+				v1 = voxmod.mc.at(i).intersection_points.at( triTable[corner_index][j  ]);
+				v2 = voxmod.mc.at(i).intersection_points.at( triTable[corner_index][j+1]);
+				v3 = voxmod.mc.at(i).intersection_points.at( triTable[corner_index][j+2]);
 
 				if (!v1.equals( null) && \
 					!v2.equals( null) && \
