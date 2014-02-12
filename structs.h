@@ -1,4 +1,4 @@
-#define VOXEL_WIDTH 0.5
+#define VOXEL_WIDTH 0.45
 #define FLOOR -10
 #define LEFT_WALL -40
 #define RIGHT_WALL 40
@@ -15,6 +15,12 @@ public:
 		this->x=x;
 		this->y=y;
 		this->z=z;
+	}
+
+	void insert( Point p){
+		this->x=p.x;
+		this->y=p.y;
+		this->z=p.z;
 	}
 
 	bool equals( Point p){

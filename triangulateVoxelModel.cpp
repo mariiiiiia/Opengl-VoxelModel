@@ -322,15 +322,6 @@ void marchingCubes( VoxelModel &voxmod, std::vector< Point> vertices, std::vecto
 		newNormals.clear();
 		newVertNormals.clear();
 
-		for (int k=0; k<int(voxmod.mc.size()); k++){
-			for (int j=k+1; j<int(voxmod.mc.size()); j++){
-				if ( voxmod.mc.at(k).equals( voxmod.mc.at(j))){
-					voxmod.mc.at(k).tr.push_back( voxmod.mc.at(j).tr.at(0));
-					voxmod.mc.erase( voxmod.mc.begin()+j);
-				}
-			}
-		}
-
 		int size = int(voxmod.mc.size());
 		for (int i=0; i<int(voxmod.mc.size()); i++){
 			cube.clear();
@@ -457,145 +448,6 @@ void ccwTriangle( Point &v1, Point &v2, Point &v3){
 
 }
 
-Point lineTriangleIntersection( TriangleCoord tr, Point c1, Point c2, bool &intersp_found){
-	Point tp1, tp2, tp3;
-	tp1 = tr.p1; tp2 = tr.p2; tp3 = tr.p3;
-	// plane equation: Ax+By+Cz=D
-	// compute triangle vectors and normal
-	Vector ab,ac, normal, bc, ca;
-	ab.insert(tp2.x-tp1.x, tp2.y-tp1.y, tp2.z-tp1.z);  // vector tp1->tp2
-	bc.insert(tp3.x-tp2.x, tp3.y-tp2.y, tp3.z-tp2.z);  // vector tp2->tp3
-	ca.insert(tp1.x-tp3.x, tp1.y-tp3.y, tp1.z-tp3.z);  // vector tp3->tp1
-	ac.insert(tp3.x-tp1.x, tp3.y-tp1.y, tp3.z-tp1.z);  // vector tp1->tp2
-	normal = ab.crossProduct(ac);
-	// calculate line direction vector (not normalized)
-	Vector line_dir;
-	line_dir.insert( c2.x-c1.x, c2.y-c1.y, c2.z-c1.z);
-	float normDotRayDir = normal.dotproduct( line_dir);
-	// calculate D
-	float D = normal.dotproduct(tp1);
-	// line parametric form c1+line_dir*t 
-	// compute t
-	float t= (D - normal.dotproduct(c1))/ normDotRayDir;
-	// compute the intersection point 
-	Point interp;
-	interp.insert( c1.x+t*line_dir.x, c1.y+t*line_dir.y, c1.z+t*line_dir.z);
-
-	// CHECK IF INTERP IS INSIDE THE EDGE - OTHERWISE RETURN FALSE
-	// THAT'S BECAUSE WE DON'T KNOW WHICH TRIANGLE CUT THIS EDGE
-	float edge_length = pow( line_dir.x, 2) + pow( line_dir.y, 2) + pow( line_dir.z, 2);
-	float c1interp_length = pow( interp.x- c1.x, 2) + pow( interp.y- c1.y, 2) + pow( interp.z- c1.z, 2);
-	float c2interp_length = pow( interp.x- c2.x, 2) + pow( interp.y- c2.y, 2) + pow( interp.z- c2.z, 2);
-
-
-	if (c1interp_length <= edge_length && c2interp_length <= edge_length){
-		intersp_found = true;
-		return interp;
-	}
-	else {
-		intersp_found = false;
-		return interp;
-	}
-	// check if the intersection point interp is inside or outside the triangle
-	// that means we check if the point is at the right side of the triangle vectors 
-	// that's legal if triangles are counter-clockwise
-	//------------------------------------------------------
-	//Vector ap,bp,cp;
-	//ap.insert( c1.x-tp1.x, c1.y-tp1.y, c1.z-tp1.z);     //vector tp1->lp
-	//Vector n1;
-	//n1 = ab.crossProduct(ap);
-	//float dotpr0 = normal.dotproduct(n1);
-	//if (dotpr0<0) {intersp_found=false; return interp;}  // lp is on the right side 
-
-	//bp.insert( c1.x-tp2.x, c1.y-tp2.y, c1.z-tp2.z);
-	//Vector n2;
-	//n2 = bc.crossProduct(bp);
-	//float dotpr1 = normal.dotproduct(n2);
-	//if (dotpr1<0) {intersp_found=false; return interp;} // lp is on the right side
-	//	
-	//cp.insert( c1.x-tp3.x, c1.y-tp3.y, c1.z-tp3.z);
-	//Vector n3;
-	//n3 = ca.crossProduct(cp);
-	//float dotpr2 = normal.dotproduct(n3);
-	//if (dotpr2<0) {intersp_found=false; return interp;} // lp is on the right side
-
-	//intersp_found = true;
-	//return interp;
-}
-
-Point checkLineTriangleIntersection( TriangleCoord tri, Point lp1, Point lp2, bool &intersp_found){
-	Point tp1, tp2, tp3;
-	tp1.insert(tri.p1.x, tri.p1.y, tri.p1.z);
-	tp2.insert(tri.p2.x, tri.p2.y, tri.p2.z);
-	tp3.insert(tri.p3.x, tri.p3.y, tri.p3.z);
-
-	// plane equation: Ax+By+Cz=D
-	// compute triangle vectors
-	Vector ab,bc,ca,ac, line_dir;
-	ab.insert(tp2.x-tp1.x, tp2.y-tp1.y, tp2.z-tp1.z);  // vector tp1->tp2
-	bc.insert(tp3.x-tp2.x, tp3.y-tp2.y, tp3.z-tp2.z);  // vector tp2->tp3
-	ca.insert(tp1.x-tp3.x, tp1.y-tp3.y, tp1.z-tp3.z);  // vector tp3->tp1
-	ac.insert(tp3.x-tp1.x, tp3.y-tp1.y, tp3.z-tp1.z);  // vector tp1->tp3
-	// calculate NOT normalized normal
-	Vector normal = ab.crossProduct(ac);
-	// calculate line direction 
-	line_dir.insert( lp2.x-lp1.x, lp2.y-lp1.y, lp2.z-lp1.z);
-	//float dist =  sqrt( pow(line_dir.x,2)+ pow(line_dir.y,2)+ pow(line_dir.z,2));
-	//line_dir.insert( line_dir.x/dist, line_dir.y/ dist, line_dir.z/ dist);
-	// check if line and triangle plane are parallel
-	float NDotRayDir = normal.dotproduct( line_dir);
-	if (NDotRayDir==0) { printf("parallel\n"); intersp_found=false; return lp1;}	// line and triangle plane are parallel!
-	// calculate D
-	float D = normal.dotproduct(tp1);
-	// line parametric form p+n*t,where p=(p.x,p.y,p.z) and n=triangle normal
-	// compute t
-	float t= -( D + normal.dotproduct(lp1))/ NDotRayDir;
-	if (t<0) { printf("t<0\n"); intersp_found=false; return lp1;}
-	// compute the intersection point 
-	Point interp;
-	interp.insert( lp1.x+t*line_dir.x, lp1.y+t*line_dir.y, lp1.z+t*line_dir.z);
-	// check if the intersection point interp is inside or outside the triangle
-	// that means we check if the point is at the right side of the triangle vectors 
-	// that's legal if triangles are counter-clockwise
-	//------------------------------------------------------
-	Vector ap,bp,cp;
-	ap.insert( interp.x-tp1.x, interp.y-tp1.y, interp.z-tp1.z);     //vector tp1->interp
-	Vector n1;
-	n1 = ab.crossProduct(ap);
-	float dotpr0 = normal.dotproduct(n1);
-	if (dotpr0<0) { printf("dotpr0<0"); intersp_found=false; return lp1;}  // interp is on the right side 
-
-	bp.insert( interp.x-tp2.x, interp.y-tp2.y, interp.z-tp2.z);
-	Vector n2;
-	n2 = bc.crossProduct(bp);
-	float dotpr1 = normal.dotproduct(n2);
-	if (dotpr1<0) { printf("dotpr0<1"); intersp_found=false; return lp1;}  // interp is on the right side
-		
-	cp.insert( interp.x-tp3.x, interp.y-tp3.y, interp.z-tp3.z);
-	Vector n3;
-	n3 = ca.crossProduct(cp);
-	float dotpr2 = normal.dotproduct(n3);
-	if (dotpr2<0) {printf("dotpr0<2"); intersp_found=false; return lp1;}  // interp is on the right side
-	
-
-	// CHECK IF INTERP IS INSIDE THE EDGE - OTHERWISE RETURN FALSE
-	// THAT'S BECAUSE WE DON'T KNOW WHICH TRIANGLE CUT THIS EDGE
-	float edge_length = pow( line_dir.x, 2) + pow( line_dir.y, 2) + pow( line_dir.z, 2);
-	float c1interp_length = pow( interp.x- lp1.x, 2) + pow( interp.y- lp1.y, 2) + pow( interp.z- lp1.z, 2);
-	float c2interp_length = pow( interp.x- lp2.x, 2) + pow( interp.y- lp2.y, 2) + pow( interp.z- lp2.z, 2);
-
-	if (c1interp_length <= edge_length && c2interp_length <= edge_length){
-		intersp_found = true;
-		return interp;
-	}
-	else {
-		printf("length>m"); 
-		intersp_found = false;
-		return interp;
-	}
-
-}
-
 int constructCornerIndex( MarchingCube mc){
 	int corner_index=0;
 
@@ -632,74 +484,62 @@ void listMCIntersectionPoints( int edges, std::vector< Point> vertices, std::vec
 		tri.set( vertices.at(triangles.at(n).p1), vertices.at(triangles.at(n).p2), vertices.at(triangles.at(n).p3));
 
 		if (edges & 1) {
-			//vert = checkLineTriangleIntersection( tri, cube.at(0), cube.at(1), intersp_found);		//edge0
-			vert = lineTriangleIntersection( tri, cube.at(0), cube.at(1), intersp_found);		//edge0
+			vert = checkLineTriangleIntersection( tri, cube.at(0), cube.at(1), intersp_found);		//edge0
 			//vert = rayTriangleIntersection( tri, cube.at(0), cube.at(1), intersp_found);		//edge0(
 			if (intersp_found) vert_list.at( 0) = vert;
 		}
 		if (edges & 2) {
-			//vert = checkLineTriangleIntersection( tri, cube.at(1), cube.at(2), intersp_found);		//edge0
-			vert = lineTriangleIntersection( tri, cube.at(1), cube.at(2), intersp_found);		//edge1
+			vert = checkLineTriangleIntersection( tri, cube.at(1), cube.at(2), intersp_found);		//edge0
 			//vert = rayTriangleIntersection( tri, cube.at(1), cube.at(2), intersp_found);		//edge1
 			if (intersp_found) vert_list.at(1) = vert;
 		}
 		if (edges & 4) {
-			//vert = checkLineTriangleIntersection( tri, cube.at(2), cube.at(3), intersp_found);		//edge0
-			vert = lineTriangleIntersection( tri, cube.at(2), cube.at(3), intersp_found);		//edge2
+			vert = checkLineTriangleIntersection( tri, cube.at(2), cube.at(3), intersp_found);		//edge0
 			//vert = rayTriangleIntersection( tri, cube.at(2), cube.at(3), intersp_found);		//edge2
 			if (intersp_found) vert_list.at(2) = vert;
 		}
 		if (edges & 8) {
-			//vert = checkLineTriangleIntersection( tri, cube.at(3), cube.at(0), intersp_found);		//edge0
-			vert = lineTriangleIntersection( tri, cube.at(3), cube.at(0), intersp_found);		//edge3
+			vert = checkLineTriangleIntersection( tri, cube.at(3), cube.at(0), intersp_found);		//edge0
 			//vert = rayTriangleIntersection( tri, cube.at(3), cube.at(0), intersp_found);		//edge3	
 			if (intersp_found) vert_list.at(3) = vert;
 		}
 		if (edges & 16) {
-			//vert = checkLineTriangleIntersection( tri, cube.at(4), cube.at(5), intersp_found);		//edge0
-			vert = lineTriangleIntersection( tri, cube.at(4), cube.at(5), intersp_found);		//edge4
+			vert = checkLineTriangleIntersection( tri, cube.at(4), cube.at(5), intersp_found);		//edge0
 			//vert = rayTriangleIntersection( tri, cube.at(4), cube.at(5), intersp_found);		//edge4
 			if (intersp_found) vert_list.at(4) = vert;
 		}
 		if (edges & 32) {
-			//vert = checkLineTriangleIntersection( tri, cube.at(5), cube.at(6), intersp_found);		//edge0
-			vert = lineTriangleIntersection( tri, cube.at(5), cube.at(6), intersp_found);		//edge5
+			vert = checkLineTriangleIntersection( tri, cube.at(5), cube.at(6), intersp_found);		//edge0
 			//vert = rayTriangleIntersection( tri, cube.at(5), cube.at(6), intersp_found);		//edge5
 			if (intersp_found) vert_list.at(5) = vert;
 		}
 		if (edges & 64) {
-			//vert = checkLineTriangleIntersection( tri, cube.at(6), cube.at(7), intersp_found);		//edge0
-			vert = lineTriangleIntersection( tri, cube.at(6), cube.at(7), intersp_found);		//edge6
+			vert = checkLineTriangleIntersection( tri, cube.at(6), cube.at(7), intersp_found);		//edge0
 			//vert = rayTriangleIntersection( tri, cube.at(6), cube.at(7), intersp_found);		//edge6
 			if (intersp_found) vert_list.at(6) = vert;
 		}
 		if (edges & 128) {
-			//vert = checkLineTriangleIntersection( tri, cube.at(7), cube.at(4), intersp_found);		//edge0
-			vert = lineTriangleIntersection( tri, cube.at(7), cube.at(4), intersp_found);		//edge7
+			vert = checkLineTriangleIntersection( tri, cube.at(7), cube.at(4), intersp_found);		//edge0
 			//vert = rayTriangleIntersection( tri, cube.at(7), cube.at(4), intersp_found);		//edge7
 			if (intersp_found) vert_list.at(7) = vert;
 		}
 		if (edges & 256) {
-			//vert = checkLineTriangleIntersection( tri, cube.at(0), cube.at(4), intersp_found);		//edge0
-			vert = lineTriangleIntersection( tri, cube.at(0), cube.at(4), intersp_found);		//edge8
+			vert = checkLineTriangleIntersection( tri, cube.at(0), cube.at(4), intersp_found);		//edge0
 			//vert = rayTriangleIntersection( tri, cube.at(0), cube.at(4), intersp_found);		//edge8
 			if (intersp_found) vert_list.at(8) = vert;
 		}
 		if (edges & 512) {
-			//vert = checkLineTriangleIntersection( tri, cube.at(1), cube.at(5), intersp_found);		//edge0
-			vert = lineTriangleIntersection( tri, cube.at(1), cube.at(5), intersp_found);		//edge9
+			vert = checkLineTriangleIntersection( tri, cube.at(1), cube.at(5), intersp_found);		//edge0
 			//vert = rayTriangleIntersection( tri, cube.at(1), cube.at(5), intersp_found);		//edge9
 			if (intersp_found) vert_list.at(9) = vert;
 		}
 		if (edges & 1024) {
-			//vert = checkLineTriangleIntersection( tri, cube.at(2), cube.at(6), intersp_found);		//edge0
-			vert = lineTriangleIntersection( tri, cube.at(2), cube.at(6), intersp_found);		//edge10
+			vert = checkLineTriangleIntersection( tri, cube.at(2), cube.at(6), intersp_found);		//edge0
 			//vert = rayTriangleIntersection( tri, cube.at(2), cube.at(6), intersp_found);		//edge10
 			if (intersp_found) vert_list.at(10) = vert;
 		}
 		if (edges & 2048)	{
-			//vert = checkLineTriangleIntersection( tri, cube.at(3), cube.at(7), intersp_found);		//edge0
-			vert = lineTriangleIntersection( tri, cube.at(3), cube.at(7), intersp_found);		//edge11
+			vert = checkLineTriangleIntersection( tri, cube.at(3), cube.at(7), intersp_found);		//edge0
 			//vert = rayTriangleIntersection( tri, cube.at(3), cube.at(7), intersp_found);		//edge11
 			if (intersp_found) vert_list.at(11) = vert;
 		}
@@ -823,3 +663,90 @@ Point rayTriangleIntersection( TriangleCoord T, Point c1, Point c2, bool &inters
 
 }
 
+Point checkLineTriangleIntersection( TriangleCoord tri, Point lp1, Point lp2, bool &intersp_found){
+	Point tp1, tp2, tp3;
+	tp1.insert(tri.p1);
+	tp2.insert(tri.p2);
+	tp3.insert(tri.p3);
+
+	// plane equation: Ax+By+Cz=D
+	// compute triangle vectors
+	Vector ab,bc,ca,ac, line_dir, normal;
+	ab.insert(tp2.x-tp1.x, tp2.y-tp1.y, tp2.z-tp1.z);  // vector tp1->tp2
+	bc.insert(tp3.x-tp2.x, tp3.y-tp2.y, tp3.z-tp2.z);  // vector tp2->tp3
+	ca.insert(tp1.x-tp3.x, tp1.y-tp3.y, tp1.z-tp3.z);  // vector tp3->tp1
+	ac.insert(tp3.x-tp1.x, tp3.y-tp1.y, tp3.z-tp1.z);  // vector tp1->tp3
+	// calculate NOT normalized normal
+	//normal = ab.crossProduct(ac);
+	// calculate line direction 
+	line_dir.insert( lp2.x-lp1.x, \
+					 lp2.y-lp1.y, \
+					 lp2.z-lp1.z);
+	//float dist =  sqrt( pow(line_dir.x,2)+ pow(line_dir.y,2)+ pow(line_dir.z,2));
+	//line_dir.insert( line_dir.x/dist, line_dir.y/ dist, line_dir.z/ dist);
+	// check if line and triangle plane are parallel
+	float NDotRayDir = normal.dotproduct( line_dir);
+	if (NDotRayDir==0) { intersp_found=false; return lp1;}	// line and triangle plane are parallel!
+	// calculate D
+	float D = -normal.dotproduct(tp1);
+	// line parametric form p+n*t,where p=(p.x,p.y,p.z) and n=triangle normal
+	// compute t
+	float t= -( D + normal.dotproduct(lp1))/ NDotRayDir;
+	if (t<0) { intersp_found=false; return lp1;}	
+	// compute the intersection point 
+	Point interp;
+	interp.insert( lp1.x+t*line_dir.x, \
+				   lp1.y+t*line_dir.y, \
+				   lp1.z+t*line_dir.z);
+	// check if the intersection point interp is inside or outside the triangle
+	// that means we check if the point is at the right side of the triangle vectors 
+	// that's legal if triangles are counter-clockwise
+	//------------------------------------------------------
+	//Vector ap,bp,cp;
+	//ap.insert( interp.x-tp1.x, \
+	//		   interp.y-tp1.y, \
+	//		   interp.z-tp1.z);     //vector tp1->interp
+	//Vector n1;
+	//n1 = ab.crossProduct(ap);
+	//float dotpr0 = normal.dotproduct(n1);
+	//if (dotpr0<0) { intersp_found=false; return lp1;}	 // interp is on the right side 
+
+	//bp.insert( interp.x-tp2.x, \
+	//		   interp.y-tp2.y, \
+	//		   interp.z-tp2.z);
+	//Vector n2;
+	//n2 = bc.crossProduct(bp);
+	//float dotpr1 = normal.dotproduct(n2);
+	//if (dotpr1<0) { intersp_found=false; return lp1;}	  // interp is on the right side
+	//	
+	//cp.insert( interp.x-tp3.x, \
+	//		   interp.y-tp3.y, \
+	//		   interp.z-tp3.z);
+	//Vector n3;
+	//n3 = ca.crossProduct(cp);
+	//float dotpr2 = normal.dotproduct(n3);
+	//if (dotpr2<0) { intersp_found=false; return lp1;}	  // interp is on the right side
+
+
+	if (line_dir.y!=0){
+		if ( (interp.y<=lp1.y && interp.y>=lp2.y) || (interp.y>=lp1.y && interp.y<=lp2.y) ) { intersp_found=true; return interp;}	
+		else { intersp_found=false; return lp1;}		
+	}
+	if (line_dir.z!=0){
+		if ( (interp.z<=lp1.z && interp.z>=lp2.z) || (interp.z>=lp1.z && interp.z<=lp2.z) ) { intersp_found=true; return interp;}
+		else { intersp_found=false; return lp1;}			
+	}
+	if (line_dir.x!=0){
+		if ( (interp.x<=lp1.x && interp.x>=lp2.x) || (interp.x>=lp1.x && interp.x<=lp2.x) ) { intersp_found=true; return interp;}
+		else { intersp_found=false; return lp1;}			
+	}
+
+	//glColor3f( 1, 0.3,1);
+	//glBegin( GL_POLYGON);
+	//glVertex3f( interp.x, interp.y, interp.z);
+	//glVertex3f( interp.x+0.1, interp.y, interp.z);
+	//glVertex3f( interp.x, interp.y+0.1, interp.z);
+	//glEnd();
+	intersp_found=false; 
+	return lp1;			
+}

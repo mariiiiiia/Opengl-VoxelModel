@@ -51,7 +51,6 @@ static bool retriangulate=false;
 
 void Render()
 {    
-
 	//CLEARS FRAME BUFFER ie COLOR BUFFER& DEPTH BUFFER (1.0)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  // Clean up the colour of the window
 														   // and the depth buffer
@@ -90,7 +89,7 @@ void Render()
 		
 	glScalef( scalex, scaley, scalez);
 	//---------- RENDER OBJECT ----------------
-	if ( !sphere_voxels && !free_fall && !rewind_free_fall && !retriangulate){
+	if ( !voxel_model_state && !sphere_voxels && !free_fall && !rewind_free_fall && !retriangulate){
 		if (obj_file=="objects/unicorn_low.obj"){
 			glColor4f(1,1,1,1.0);
 			glMateriali(GL_FRONT,GL_SHININESS,51.2);
@@ -153,6 +152,7 @@ void Render()
 	}
 	//--------------- FREE FALL -------------------
 	if (free_fall){		
+		//StartCounter();
 		// check floor collisions
 		checkFloorCollisions( voxel_model.voxels, tx,ty,tz, dt);	
 
@@ -162,10 +162,13 @@ void Render()
 
 		//simulate free falling
 		freeFallOfVoxels( voxel_model.voxels, voxel_data, dt);
+
 	}
 	//---------------- JUST SHOW SPHERE VOXELS or LET THEM FALL FREE -----------
 	if (sphere_voxels || free_fall){
 		drawSphereVoxels( voxel_model.voxels );
+		
+		//printf("total delay %f\n", GetCounter());
 	}
 	//----------------- REWIND FREE FALLING -----------------
 	else if (rewind_free_fall){
