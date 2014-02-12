@@ -7,6 +7,7 @@
 #include "gl/glut.h"   // - An interface and windows 
                        //   management library
 #include "structs.h"
+#include "voxelModel.h"
 #include "visuals.h"   // for parameter obj_file and checking if it is unicorn
 #include "Load_obj.h"
 #include "Show_Obj.h"
@@ -64,7 +65,7 @@ void showObj(const std::vector<Point> &vert,const std::vector<Triangle> &tr, boo
 			}
 			else{																	// without texture solid
 				glBegin(GL_TRIANGLES);
-					glColor4f(0.5,0.5,0.9,1.0);
+					glColor4f(0.9,0.8,0.8,0.2);
 
 					glNormal3f(vertNormal.at(tr.at(i).p1).x, vertNormal.at(tr.at(i).p1).y, vertNormal.at(tr.at(i).p1).z);
 					glVertex3f( vert.at(tr.at(i).p1).x, vert.at(tr.at(i).p1).y, vert.at(tr.at(i).p1).z);
@@ -82,7 +83,7 @@ void showObj(const std::vector<Point> &vert,const std::vector<Triangle> &tr, boo
 	else if (wireframe){												// wireframe rendering
 		for (int i=0; i<int(tr.size()); i++)
 		{
-			glBegin(GL_LINES);
+			glBegin(GL_LINE_LOOP);
 				glNormal3f(vertNormal.at(tr.at(i).p1).x, vertNormal.at(tr.at(i).p1).y, vertNormal.at(tr.at(i).p1).z);
 				glVertex3f( vert.at(tr.at(i).p1).x, vert.at(tr.at(i).p1).y, vert.at(tr.at(i).p1).z);
 				glNormal3f(vertNormal.at(tr.at(i).p2).x, vertNormal.at(tr.at(i).p2).y, vertNormal.at(tr.at(i).p2).z);

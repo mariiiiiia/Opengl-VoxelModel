@@ -5,10 +5,11 @@
 
 extern std::vector<Point> vertices;
 extern std::vector<Triangle> triangles;
-extern std::vector<Voxel> voxels;
-extern std::vector<Vector> voxelVelocity;
+extern VoxelModel voxel_model;
+//extern std::vector<Vector> voxelVelocity;
 extern std::string obj_file;
 //extern std::vector< std::vector< std::vector<Point> >> buckets;
+static std::vector< Triangle> newTriangles;
 
 //-------- Functions --------------------------------
 
@@ -40,10 +41,6 @@ void MenuSelect(int choice);
 
 void lightSources();
 
-Vector CalcNormal( Triangle triangle);
-
 int loadTexture(const char *filename);
 
 void setRoom();
-
-void avgNormals(std::vector<Triangle> triangle, std::vector<Point> vertice);

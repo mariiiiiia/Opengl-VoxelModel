@@ -15,6 +15,7 @@
 #include "gl/glut.h"   // - An interface and windows 
                        //   management library
 #include "structs.h"
+#include "voxelModel.h"
 #include "visuals.h"   // Header file for our OpenGL functions
 
 ////////////////// State Variables ////////////////////////
@@ -23,8 +24,7 @@ std::string obj_file;
 std::vector<Point> vertices;
 std::vector<Triangle> triangles;
 
-std::vector<Voxel> voxels;
-std::vector<Vector> voxelVelocity;
+VoxelModel voxel_model;
 
 /////////////// Main Program ///////////////////////////
 

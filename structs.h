@@ -1,4 +1,4 @@
-#define VOXEL_WIDTH 0.8
+#define VOXEL_WIDTH 0.45
 #define FLOOR -10
 #define LEFT_WALL -40
 #define RIGHT_WALL 40
@@ -17,6 +17,12 @@ public:
 		this->z=z;
 	}
 
+	void insert( Point p){
+		this->x=p.x;
+		this->y=p.y;
+		this->z=p.z;
+	}
+
 	bool equals( Point p){
 		if (this->x==p.x && this->y==p.y && this->z==p.z) return true;
 		else return false;
@@ -32,6 +38,14 @@ public:
 		else return false;
 	}
 
+	Point operator- (Point p){
+		Point new_p;
+		new_p.x= this->x-p.x;
+		new_p.y= this->y-p.y;
+		new_p.z= this->z-p.z;
+
+		return new_p;
+	}
 };
 
 class Vector {
@@ -49,6 +63,24 @@ public:
 		this->x=x;
 		this->y=y;
 		this->z=z;
+	}
+
+	Vector operator- (Vector v){
+		Vector new_v;
+		new_v.x= this->x-v.x;
+		new_v.y= this->y-v.y;
+		new_v.z= this->z-v.z;
+
+		return new_v;
+	}
+
+	Vector operator+ (Vector v){
+		Vector new_v;
+		new_v.x= this->x+v.x;
+		new_v.y= this->y+v.y;
+		new_v.z= this->z+v.z;
+
+		return new_v;
 	}
 
 	float dotproduct(Vector v){
@@ -78,6 +110,11 @@ public:
 		if (this->x>=v.x && this->y>=v.y && this->z>=v.z) return true;
 		else return false;
 	}
+
+	bool operator>(Vector v){
+		if (this->x>v.x && this->y>v.y && this->z>v.z) return true;
+		else return false;
+	}
 	
 	bool operator<=(Vector v){
 		if (this->x<=v.x && this->y<=v.y && this->z<=v.z) return true;
@@ -87,18 +124,35 @@ public:
 };
 
 class Triangle {
-	public:
-		int p1;  // pointers to vertices
-		int p2;
-		int p3;
+public:
+	int p1;  // pointers to vertices
+	int p2;
+	int p3;
+
+	void set( int tp1, int tp2, int tp3){
+		this->p1 = tp1;
+		this->p2 = tp2;
+		this->p3 = tp3;
+	}
+};
+
+class TriangleCoord{
+public:
+	Point p1;
+	Point p2;
+	Point p3;
+
+	void set( Point tp1, Point tp2, Point tp3){
+		this->p1 = tp1;
+		this->p2 = tp2;
+		this->p3 = tp3;
+	}
 };
 
 class Voxel : public Point
 {
 public:
-//	float x;
-//	float y;
-//	float z;
+	Vector velocity;
 
 	static inline float width(){
 		return VOXEL_WIDTH;
@@ -110,20 +164,42 @@ public:
 		this->z=z;
 	}
 
-	// voxel == point
-	//bool operator==(const Point &p) {
-	//	return equals(p);
-	//}
-
-	//bool equals(const Point &p){
-	//	if (this->x==p.x && this->y==p.y && this->z==p.z) return true;
-	//	else return false;
-	//}
-
 	bool equals( Voxel v){
 		if (this->x==v.x && this->y==v.y && this->z==v.z) return true;
 		else return false;
 	}
-
 };
 
+class MarchingCube : public Voxel{
+public:
+	std::vector< bool> corner_states;		   // 0 for corners out of the isosurface 1 for those inside the isosurface
+	std::vector< Triangle> tr;				   // triangles inside the marching cube - so that we can compute their intersection points
+	std::vector< Point> intersection_points;   // intersection point between the marching cube and the isosurface
+	
+	void set(Voxel vox){
+		this->x = vox.x;
+		this->y = vox.y;
+		this->z = vox.z;
+	}
+	
+	void set(float x, float y, float z){
+		this->x = x;
+		this->y = y;
+		this->z = z;
+	}
+
+	void turnCornerOnOrOff( int p, bool st){
+		this->corner_states.insert( corner_states.begin()+ p-1, st);
+	}
+
+	void insertIntersectionPoint( Point p){
+		this->intersection_points.push_back( p);
+	}
+
+	bool equals( MarchingCube mc){
+		if (this->x==mc.x && this->y==mc.y && this->z==mc.z){
+			return true;
+		}
+		else return false;
+	}
+};
