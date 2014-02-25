@@ -1,5 +1,5 @@
 
-void marchingCubes( VoxelModel &voxmod, std::vector< Point> vert, std::vector<Triangle> &newTriangles);
+void marchingCubes( VoxelModel &voxmod, std::vector< Point> vert, std::vector<Triangle> &newTriangles, std::vector<Point> &newVertices);
 
 void ccwTriangle( Point &v1, Point &v2, Point &v3);
 
@@ -14,3 +14,5 @@ void listMCIntersectionPoints( int edges, std::vector< Point> vertices, std::vec
 bool findPointInVertices( Point v, std::vector< Point> vertices, int &pointerToVertice);
 
 Point rayTriangleIntersection( TriangleCoord T, Point c1, Point c2, bool &inters_found);
+
+void findVertices( std::vector< Point> inter_points, Point &v1, Point &v2, Point &v3);

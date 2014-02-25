@@ -1,4 +1,3 @@
-#define VOXEL_WIDTH 0.45
 #define FLOOR -10
 #define LEFT_WALL -40
 #define RIGHT_WALL 40
@@ -35,6 +34,16 @@ public:
 	
 	bool operator<(Point p){
 		if (this->x<p.x && this->y<p.y && this->z<p.z) return true;
+		else return false;
+	}
+
+	bool operator>=(Point p){
+		if (this->x>=p.x && this->y>=p.y && this->z>=p.z) return true;
+		else return false;
+	}
+	
+	bool operator<=(Point p){
+		if (this->x<=p.x && this->y<=p.y && this->z<=p.z) return true;
 		else return false;
 	}
 
@@ -121,6 +130,11 @@ public:
 		else return false;
 	}
 
+	bool operator<(Vector v){
+		if (this->x<v.x && this->y<v.y && this->z<v.z) return true;
+		else return false;
+	}
+
 };
 
 class Triangle {
@@ -154,10 +168,6 @@ class Voxel : public Point
 public:
 	Vector velocity;
 
-	static inline float width(){
-		return VOXEL_WIDTH;
-	}
-
 	void insert(float x, float y, float z){
 		this->x=x;
 		this->y=y;
@@ -189,7 +199,8 @@ public:
 	}
 
 	void turnCornerOnOrOff( int p, bool st){
-		this->corner_states.insert( corner_states.begin()+ p-1, st);
+		if (this->corner_states.size()<8)	this->corner_states.push_back( st);
+		else this->corner_states.at( p)= st;
 	}
 
 	void insertIntersectionPoint( Point p){

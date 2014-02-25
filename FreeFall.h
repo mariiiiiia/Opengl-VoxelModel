@@ -7,13 +7,13 @@ void StartCounter();
 double GetCounter();
 
 
-void drawSphereVoxels(std::vector<Voxel> voxels);
+void drawSphereVoxels(std::vector<Voxel> voxels, float rad);
 
 void freeFallOfVoxels( std::vector<Voxel> &voxels, std::vector< std::vector<Voxel>> &voxel_data, float dt);
 
-void checkFloorCollisions( std::vector<Voxel> &voxels, float tx, float ty, float tz, float dt);
+void checkFloorCollisions( std::vector<Voxel> &voxels, float voxel_width, float tx, float ty, float tz, float dt);
 
-void checkVoxelCollisions( std::vector<Voxel> &voxels);
+void checkVoxelCollisions( std::vector<Voxel> &voxels, float voxel_width);
 
 void initiateVelocities( std::vector<Voxel> &voxels);
 

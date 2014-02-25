@@ -8,7 +8,7 @@
 #include "counter.h"
 
 //static std::vector< Triangle> newTriangles;
-static std::vector< Point> newVertices;
+//static std::vector< Point> newVertices;
 static std::vector< Vector> newVertNormals;
 static std::vector< Vector> newNormals;
 
@@ -306,7 +306,7 @@ int triTable[256][16] =
 {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}};
 
 
-void marchingCubes( VoxelModel &voxmod, std::vector< Point> vertices, std::vector<Triangle> &newTriangles){
+void marchingCubes( VoxelModel &voxmod, std::vector< Point> vertices, std::vector<Triangle> &newTriangles, std::vector<Point> &newVertices){
 	//std::vector< MarchingCube> mc = voxmod.mc;
 	//std::vector< Voxel> voxels = voxmod.voxels;
 	std::vector< Point> vert_list;
@@ -322,52 +322,55 @@ void marchingCubes( VoxelModel &voxmod, std::vector< Point> vertices, std::vecto
 		newNormals.clear();
 		newVertNormals.clear();
 
-		int size = int(voxmod.mc.size());
 		for (int i=0; i<int(voxmod.mc.size()); i++){
 			cube.clear();
 			Point cb;
-			float d=VOXEL_WIDTH;
-			cb.insert( voxmod.mc.at(i).x-d/2, voxmod.mc.at(i).y-d/2, voxmod.mc.at(i).z+d/2);								//cube0
+			float d=voxmod.voxel_width;
+			cb.insert( voxmod.mc.at(i).x-d/2, voxmod.mc.at(i).y-d/2, voxmod.mc.at(i).z+d/2);	//cube0
 			cube.push_back( cb);
-			cb.insert( voxmod.mc.at(i).x+d/2, voxmod.mc.at(i).y-d/2, voxmod.mc.at(i).z+d/2);				//cube1
+			cb.insert( voxmod.mc.at(i).x+d/2, voxmod.mc.at(i).y-d/2, voxmod.mc.at(i).z+d/2);	//cube1
 			cube.push_back( cb);
 			cb.insert( voxmod.mc.at(i).x+d/2, voxmod.mc.at(i).y+d/2, voxmod.mc.at(i).z+d/2);	//cube2
 			cube.push_back( cb);
-			cb.insert( voxmod.mc.at(i).x-d/2, voxmod.mc.at(i).y+d/2, voxmod.mc.at(i).z+d/2);				//cube3
+			cb.insert( voxmod.mc.at(i).x-d/2, voxmod.mc.at(i).y+d/2, voxmod.mc.at(i).z+d/2);	//cube3
 			cube.push_back( cb);
-			cb.insert( voxmod.mc.at(i).x-d/2, voxmod.mc.at(i).y-d/2, voxmod.mc.at(i).z-d/2);				//cube4
+			cb.insert( voxmod.mc.at(i).x-d/2, voxmod.mc.at(i).y-d/2, voxmod.mc.at(i).z-d/2);	//cube4
 			cube.push_back( cb);
 			cb.insert( voxmod.mc.at(i).x+d/2, voxmod.mc.at(i).y-d/2, voxmod.mc.at(i).z-d/2);	//cube5
 			cube.push_back( cb);
-			cb.insert( voxmod.mc.at(i).x+d/2, voxmod.mc.at(i).y+d/2, voxmod.mc.at(i).z-d/2);  //cube6
+			cb.insert( voxmod.mc.at(i).x+d/2, voxmod.mc.at(i).y+d/2, voxmod.mc.at(i).z-d/2);    //cube6
 			cube.push_back( cb);
 			cb.insert( voxmod.mc.at(i).x-d/2, voxmod.mc.at(i).y+d/2, voxmod.mc.at(i).z-d/2);	//cube7
 			cube.push_back( cb);
 
 			int corner_index = constructCornerIndex( voxmod.mc.at(i));
 			
-			int edges;
-			edges = edgeTable[ corner_index];
+			//int edges;
+			//edges = edgeTable[ corner_index];
 
-			if (corner_index==0) printf(" corner_index=0. something wrong with voxel model.\n");
+			//if (corner_index==0) printf(" corner_index=0.\n");
 			
 			// update vertlist
 			//listMCIntersectionPoints( edges, vertices, voxmod.mc.at(i).tr, cube, vert_list);
 			
 
 			/* Create the triangle */
-			for (int j=0; triTable[corner_index][j]!=-1; j+=3) {
+			for (int j=0; triTable[corner_index][j  ]!=-1; j+=3) {
 				Point v1,v2,v3;
 				Triangle tri;
 				v1 = voxmod.mc.at(i).intersection_points.at( triTable[corner_index][j  ]);
 				v2 = voxmod.mc.at(i).intersection_points.at( triTable[corner_index][j+1]);
 				v3 = voxmod.mc.at(i).intersection_points.at( triTable[corner_index][j+2]);
+				//v1 = vert_list.at( triTable[corner_index][j  ]);
+				//v2 = vert_list.at( triTable[corner_index][j+1]);
+				//v3 = vert_list.at( triTable[corner_index][j+2]);
+
 
 				if (!v1.equals( null) && \
 					!v2.equals( null) && \
 					!v3.equals( null) ){
 					
-					ccwTriangle(v1, v2, v3);
+					//ccwTriangle(v1, v2, v3);
 
 					int pointerToVertice;
 					if ( findPointInVertices( v1, newVertices, pointerToVertice)){
@@ -377,7 +380,6 @@ void marchingCubes( VoxelModel &voxmod, std::vector< Point> vertices, std::vecto
 						// we have new point. Set the newVertices and the pointer
 						newVertices.push_back( v1);
 						tri.p1 = int(newVertices.size())-1;}
-		
 					if ( findPointInVertices( v2, newVertices, pointerToVertice)){
 						// the point is already in the newVertices list, so just set the triangle pointer
 						tri.p2 = pointerToVertice;}
@@ -385,7 +387,6 @@ void marchingCubes( VoxelModel &voxmod, std::vector< Point> vertices, std::vecto
 						// we have new point. Set the newVertices and the pointer
 						newVertices.push_back( v2);
 						tri.p2 = int(newVertices.size())-1;}
-
 					if ( findPointInVertices( v3, newVertices, pointerToVertice)){
 						// the point is already in the newVertices list, so just set the triangle pointer
 						tri.p3 = pointerToVertice;}
@@ -394,7 +395,36 @@ void marchingCubes( VoxelModel &voxmod, std::vector< Point> vertices, std::vecto
 						newVertices.push_back( v3);
 						tri.p3 = int(newVertices.size())-1;}
 
-					newTriangles.push_back( tri );					
+					newTriangles.push_back( tri);					
+				}
+				else {
+					findVertices( voxmod.mc.at(i).intersection_points, v1,v2,v3);
+					if (!v1.equals(null) && !v2.equals(null) && !v3.equals( null)){
+						int pointerToVertice;
+						if ( findPointInVertices( v1, newVertices, pointerToVertice)){
+							// the point is already in the newVertices list, so just set the triangle pointer
+							tri.p1 = pointerToVertice;}
+						else {
+							// we have new point. Set the newVertices and the pointer
+							newVertices.push_back( v1);
+							tri.p1 = int(newVertices.size())-1;}
+						if ( findPointInVertices( v2, newVertices, pointerToVertice)){
+							// the point is already in the newVertices list, so just set the triangle pointer
+							tri.p2 = pointerToVertice;}
+						else {
+							// we have new point. Set the newVertices and the pointer
+							newVertices.push_back( v2);
+							tri.p2 = int(newVertices.size())-1;}
+						if ( findPointInVertices( v3, newVertices, pointerToVertice)){
+							// the point is already in the newVertices list, so just set the triangle pointer
+							tri.p3 = pointerToVertice;}
+						else {
+							// we have new point. Set the newVertices and the pointer
+							newVertices.push_back( v3);
+							tri.p3 = int(newVertices.size())-1;}
+
+						newTriangles.push_back( tri);								
+					}
 				}
 			}
 		}
@@ -411,16 +441,22 @@ void marchingCubes( VoxelModel &voxmod, std::vector< Point> vertices, std::vecto
 	for (int i=0; i<int(newTriangles.size()); i++)
 	{
 		glColor3f( 0.4, 0.7, 0.2);
-
+		
+		glDisable(GL_CULL_FACE);
+		
 		glBegin(GL_TRIANGLES);
 			glNormal3f( newVertNormals.at( newTriangles.at(i).p1).x, newVertNormals.at(newTriangles.at(i).p1).y, newVertNormals.at(newTriangles.at(i).p1).z);
-			glVertex3f( newVertices.at( newTriangles.at(i).p1).x, newVertices.at(newTriangles.at(i).p1).y, newVertices.at(newTriangles.at(i).p1).z);
-			
+			glVertex3f( newVertices.at( newTriangles.at(i).p1).x, \
+						newVertices.at( newTriangles.at(i).p1).y, \
+						newVertices.at( newTriangles.at(i).p1).z);		
 			glNormal3f( newVertNormals.at( newTriangles.at(i).p2).x, newVertNormals.at(newTriangles.at(i).p2).y, newVertNormals.at(newTriangles.at(i).p2).z);
-			glVertex3f( newVertices.at( newTriangles.at(i).p2).x, newVertices.at(newTriangles.at(i).p2).y, newVertices.at(newTriangles.at(i).p2).z);
-			
+			glVertex3f( newVertices.at( newTriangles.at(i).p2).x, \
+						newVertices.at( newTriangles.at(i).p2).y, \
+						newVertices.at( newTriangles.at(i).p2).z);			
 			glNormal3f( newVertNormals.at( newTriangles.at(i).p3).x, newVertNormals.at(newTriangles.at(i).p3).y, newVertNormals.at(newTriangles.at(i).p3).z);
-			glVertex3f( newVertices.at( newTriangles.at(i).p3).x, newVertices.at(newTriangles.at(i).p3).y, newVertices.at(newTriangles.at(i).p3).z);
+			glVertex3f( newVertices.at( newTriangles.at(i).p3).x, \
+						newVertices.at( newTriangles.at(i).p3).y, \
+						newVertices.at( newTriangles.at(i).p3).z);
 		glEnd();
 	}
 
@@ -428,19 +464,22 @@ void marchingCubes( VoxelModel &voxmod, std::vector< Point> vertices, std::vecto
 }
 
 void ccwTriangle( Point &v1, Point &v2, Point &v3){
-	Vector v1v2, v2v3, v3v1;
+	Vector v1v2, v2v3, v3v1, v1v3, v2v1, v3v2;
 	v1v2.insert( v2.x-v1.x, v2.y-v1.y, v2.z-v1.z);
 	v2v3.insert( v3.x-v2.x, v3.y-v2.y, v3.z-v2.z);
 	v3v1.insert( v1.x-v3.x, v1.y-v3.y, v1.z-v3.z);
+	v1v3.insert( -v3v1.x, -v3v1.y, -v3v1.z);
+	v2v1.insert( -v1v2.x, -v1v2.y, -v1v2.z);
+	v3v2.insert( -v2v3.x, -v2v3.y, -v2v3.z);
 	
 	Vector n1,n2,n3;
-	n1 = v1v2.crossProduct( v2v3);
-	n2 = v2v3.crossProduct( v3v1);
-	n3 = v3v1.crossProduct( v1v2);
+	n1 = v1v2.crossProduct( v1v3);
+	n2 = v2v3.crossProduct( v2v1);
+	n3 = v3v1.crossProduct( v3v2);
 
 	Vector zero,temp;
 	zero.insert(0,0,0);
-	if (((n1+n2)+n3)>zero){
+	if ( n3<zero){
 		temp.insert( v2.x, v2.y, v2.z);
 		v2.insert( v3.x, v3.y, v3.z);
 		v3.insert( temp.x, temp.y, temp.z);
@@ -663,6 +702,23 @@ Point rayTriangleIntersection( TriangleCoord T, Point c1, Point c2, bool &inters
 
 }
 
+void findVertices( std::vector< Point> inter_points, Point &v1, Point &v2, Point &v3){
+	Point zero;
+	zero.insert( 0,0,0);
+	v1.insert( zero);
+	v2.insert( zero);
+	v3.insert( zero);
+	
+	for (int i=0; i<int(inter_points.size()); i++){
+		if ( !inter_points.at(i).equals( zero)){
+			if ( v1.equals( zero)) v1.insert( inter_points.at(i));
+			else if (v2.equals( zero)) v2.insert( inter_points.at(i));
+			else if (v3.equals( zero)) v3.insert( inter_points.at(i));
+		}
+	}
+
+}
+
 Point checkLineTriangleIntersection( TriangleCoord tri, Point lp1, Point lp2, bool &intersp_found){
 	Point tp1, tp2, tp3;
 	tp1.insert(tri.p1);
@@ -677,7 +733,7 @@ Point checkLineTriangleIntersection( TriangleCoord tri, Point lp1, Point lp2, bo
 	ca.insert(tp1.x-tp3.x, tp1.y-tp3.y, tp1.z-tp3.z);  // vector tp3->tp1
 	ac.insert(tp3.x-tp1.x, tp3.y-tp1.y, tp3.z-tp1.z);  // vector tp1->tp3
 	// calculate NOT normalized normal
-	//normal = ab.crossProduct(ac);
+	normal = ab.crossProduct(ac);
 	// calculate line direction 
 	line_dir.insert( lp2.x-lp1.x, \
 					 lp2.y-lp1.y, \
@@ -692,7 +748,7 @@ Point checkLineTriangleIntersection( TriangleCoord tri, Point lp1, Point lp2, bo
 	// line parametric form p+n*t,where p=(p.x,p.y,p.z) and n=triangle normal
 	// compute t
 	float t= -( D + normal.dotproduct(lp1))/ NDotRayDir;
-	if (t<0) { intersp_found=false; return lp1;}	
+	//if (t<0) { intersp_found=false; return lp1;}	
 	// compute the intersection point 
 	Point interp;
 	interp.insert( lp1.x+t*line_dir.x, \
@@ -702,44 +758,44 @@ Point checkLineTriangleIntersection( TriangleCoord tri, Point lp1, Point lp2, bo
 	// that means we check if the point is at the right side of the triangle vectors 
 	// that's legal if triangles are counter-clockwise
 	//------------------------------------------------------
-	//Vector ap,bp,cp;
-	//ap.insert( interp.x-tp1.x, \
-	//		   interp.y-tp1.y, \
-	//		   interp.z-tp1.z);     //vector tp1->interp
-	//Vector n1;
-	//n1 = ab.crossProduct(ap);
-	//float dotpr0 = normal.dotproduct(n1);
-	//if (dotpr0<0) { intersp_found=false; return lp1;}	 // interp is on the right side 
+	Vector ap,bp,cp;
+	ap.insert( interp.x-tp1.x, \
+			   interp.y-tp1.y, \
+			   interp.z-tp1.z);     //vector tp1->interp
+	Vector n1;
+	n1 = ab.crossProduct(ap);
+	float dotpr0 = normal.dotproduct(n1);
+	if (dotpr0<0) { intersp_found=false; return lp1;}	 // interp is on the right side 
 
-	//bp.insert( interp.x-tp2.x, \
-	//		   interp.y-tp2.y, \
-	//		   interp.z-tp2.z);
-	//Vector n2;
-	//n2 = bc.crossProduct(bp);
-	//float dotpr1 = normal.dotproduct(n2);
-	//if (dotpr1<0) { intersp_found=false; return lp1;}	  // interp is on the right side
-	//	
-	//cp.insert( interp.x-tp3.x, \
-	//		   interp.y-tp3.y, \
-	//		   interp.z-tp3.z);
-	//Vector n3;
-	//n3 = ca.crossProduct(cp);
-	//float dotpr2 = normal.dotproduct(n3);
-	//if (dotpr2<0) { intersp_found=false; return lp1;}	  // interp is on the right side
+	bp.insert( interp.x-tp2.x, \
+			   interp.y-tp2.y, \
+			   interp.z-tp2.z);
+	Vector n2;
+	n2 = bc.crossProduct(bp);
+	float dotpr1 = normal.dotproduct(n2);
+	if (dotpr1<0) { intersp_found=false; return lp1;}	  // interp is on the right side
+		
+	cp.insert( interp.x-tp3.x, \
+			   interp.y-tp3.y, \
+			   interp.z-tp3.z);
+	Vector n3;
+	n3 = ca.crossProduct(cp);
+	float dotpr2 = normal.dotproduct(n3);
+	if (dotpr2<0) { intersp_found=false; return lp1;}	  // interp is on the right side
 
 
-	if (line_dir.y!=0){
-		if ( (interp.y<=lp1.y && interp.y>=lp2.y) || (interp.y>=lp1.y && interp.y<=lp2.y) ) { intersp_found=true; return interp;}	
-		else { intersp_found=false; return lp1;}		
-	}
-	if (line_dir.z!=0){
-		if ( (interp.z<=lp1.z && interp.z>=lp2.z) || (interp.z>=lp1.z && interp.z<=lp2.z) ) { intersp_found=true; return interp;}
-		else { intersp_found=false; return lp1;}			
-	}
-	if (line_dir.x!=0){
-		if ( (interp.x<=lp1.x && interp.x>=lp2.x) || (interp.x>=lp1.x && interp.x<=lp2.x) ) { intersp_found=true; return interp;}
-		else { intersp_found=false; return lp1;}			
-	}
+	//if (line_dir.y!=0){
+	//	if ( (interp.y<=lp1.y && interp.y>=lp2.y) || (interp.y>=lp1.y && interp.y<=lp2.y) ) { intersp_found=true; return interp;}	
+	//	else { intersp_found=false; return lp1;}		
+	//}
+	//if (line_dir.z!=0){
+	//	if ( (interp.z<=lp1.z && interp.z>=lp2.z) || (interp.z>=lp1.z && interp.z<=lp2.z) ) { intersp_found=true; return interp;}
+	//	else { intersp_found=false; return lp1;}			
+	//}
+	//if (line_dir.x!=0){
+	//	if ( (interp.x<=lp1.x && interp.x>=lp2.x) || (interp.x>=lp1.x && interp.x<=lp2.x) ) { intersp_found=true; return interp;}
+	//	else { intersp_found=false; return lp1;}			
+	//}
 
 	//glColor3f( 1, 0.3,1);
 	//glBegin( GL_POLYGON);
@@ -747,6 +803,6 @@ Point checkLineTriangleIntersection( TriangleCoord tri, Point lp1, Point lp2, bo
 	//glVertex3f( interp.x+0.1, interp.y, interp.z);
 	//glVertex3f( interp.x, interp.y+0.1, interp.z);
 	//glEnd();
-	intersp_found=false; 
-	return lp1;			
+	intersp_found=true; 
+	return interp;			
 }

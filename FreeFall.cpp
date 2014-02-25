@@ -1,12 +1,12 @@
 #include <stdio.h>     // - Just for some ASCII messages
 #include <vector>
 #include <map>
+#include <math.h>
 #include "gl/glut.h"   // - An interface and windows 
                        //   management library
 #include "structs.h"
 #include "FreeFall.h"
 #include "counter.h"
-#include <math.h>
 
 
 static std::vector< std::vector<Voxel> > buckets;
@@ -15,31 +15,30 @@ static std::vector< std::vector<Vector>> buck_velocities;
 static int voxel_quantity=0;
 
 
-
 //================ free falling functions ==============
 
-void drawSphereVoxels(std::vector<Voxel> voxels ){
+void drawSphereVoxels(std::vector<Voxel> voxels, float rad ){
 	//StartCounter();
 
 	glColor4f( 0.4, 0.1, 0.4, 0.9);
 	for (int i=0;i<int(voxels.size()); i++){
 		glPushMatrix();
 		glTranslatef(voxels.at(i).x, voxels.at(i).y, voxels.at(i).z);
-		glutSolidSphere(VOXEL_WIDTH/2, 10, 10);
+		glutSolidSphere(rad/2, 10, 10);
 		glPopMatrix();
 	}
 
 	//printf("draw spheres %f\n", GetCounter());
 }
 
-void freeFallOfVoxels( std::vector<Voxel> &voxels, std::vector< std::vector<Voxel>> &voxel_data, float dt){
+void freeFallOfVoxels( std::vector<Voxel> &voxels, std::vector< std::vector<Voxel>> &freefall_data, float dt){
 	//StartCounter();
 
 	float g=25;  // gravity
 
 	// U=Uo+a*dt,	x=xo+U*dt
 	Vector voxel_transp;
-	std::vector<Voxel> voxel_data_t0;
+	std::vector<Voxel> freefall_data_t0;
 	if (voxel_quantity<int(voxels.size())) voxel_quantity+=5;
 
 	for (int i=0; i<int(voxels.size()); i++){
@@ -54,19 +53,19 @@ void freeFallOfVoxels( std::vector<Voxel> &voxels, std::vector< std::vector<Voxe
 			voxels.at(i).insert( voxel_transp.x, voxel_transp.y, voxel_transp.z);
 		}
 		
-		voxel_data_t0.push_back( voxels.at(i));
+		freefall_data_t0.push_back( voxels.at(i));
 	}
 
-	voxel_data.push_back( voxel_data_t0);
+	freefall_data.push_back( freefall_data_t0);
 
 	//printf("%f\n", GetCounter());
 }
 
-void checkFloorCollisions( std::vector<Voxel> &voxels, float tx, float ty, float tz, float dt ){
+void checkFloorCollisions( std::vector<Voxel> &voxels, float voxel_width, float tx, float ty, float tz, float dt ){
 	float floor = FLOOR -ty, right_wall = RIGHT_WALL -tx, left_wall = LEFT_WALL -tx, far_wall = FAR_WALL -tz, near_wall = NEAR_WALL -tz; 
 
 	float penetration;
-	float n=2;  // force of friction
+	float n=3;  // force of friction
 	
 	//float e=0.0;   //this is factor of restitution
 	//Vector normal;
@@ -77,18 +76,18 @@ void checkFloorCollisions( std::vector<Voxel> &voxels, float tx, float ty, float
 
 		//============= check collisions with floor ===========================
 
-		if ( (voxels.at(i).y- VOXEL_WIDTH/2) <= floor){
+		if ( (voxels.at(i).y- voxel_width/2) <= floor){
 			//Vn = voxels.at(i).velocity.dotproduct( normal);
 			//jf= -(1+e)*Vn/2;
 			//voxels.at(i).velocity.y = voxels.at(i).velocity.y - jf;
 			voxels.at(i).velocity.y= - voxels.at(i).velocity.y;
 
-			penetration = (VOXEL_WIDTH/2) + floor - voxels.at(i).y;
+			penetration = (voxel_width/2) + floor - voxels.at(i).y;
 			voxels.at(i).y += penetration+ 0.001;
 		}
 
-		if ( (voxels.at(i).y- VOXEL_WIDTH/2) > (floor - VOXEL_WIDTH/10) &&
-			 (voxels.at(i).y- VOXEL_WIDTH/2) < (floor + VOXEL_WIDTH/10) ){
+		if ( (voxels.at(i).y- voxel_width/2) > (floor - voxel_width/10) &&
+			 (voxels.at(i).y- voxel_width/2) < (floor + voxel_width/10) ){
 			if (voxels.at(i).velocity.x< 0) {
 				voxels.at(i).velocity.x = voxels.at(i).velocity.x + n*dt; }
 			else  {
@@ -100,27 +99,27 @@ void checkFloorCollisions( std::vector<Voxel> &voxels, float tx, float ty, float
 		}
 
 		//================== check collisions with walls =============
-		if (voxels.at(i).x>=0 && (voxels.at(i).x+ VOXEL_WIDTH/2)>= right_wall) {
+		if (voxels.at(i).x>=0 && (voxels.at(i).x+ voxel_width/2)>= right_wall) {
 			voxels.at(i).velocity.x = -voxels.at(i).velocity.x;
-			penetration = VOXEL_WIDTH/2 - (right_wall - voxels.at(i).x);
+			penetration = voxel_width/2 - (right_wall - voxels.at(i).x);
 			voxels.at(i).x -= penetration +0.001; }
-		else if (voxels.at(i).x<0 && (voxels.at(i).x - VOXEL_WIDTH/2)<= left_wall) {
+		else if (voxels.at(i).x<0 && (voxels.at(i).x - voxel_width/2)<= left_wall) {
 			voxels.at(i).velocity.x = -voxels.at(i).velocity.x;
-			penetration = VOXEL_WIDTH/2 - ( - left_wall + voxels.at(i).x);
+			penetration = voxel_width/2 - ( - left_wall + voxels.at(i).x);
 			voxels.at(i).x += penetration +0.001; }
 
-		if (voxels.at(i).z-40>=0 && (voxels.at(i).z-40 + VOXEL_WIDTH/2)>= near_wall) {
+		if (voxels.at(i).z-40>=0 && (voxels.at(i).z-40 + voxel_width/2)>= near_wall) {
 			voxels.at(i).velocity.z = -voxels.at(i).velocity.z;
-			penetration = VOXEL_WIDTH/2 - (near_wall - voxels.at(i).z+40);
+			penetration = voxel_width/2 - (near_wall - voxels.at(i).z+40);
 			voxels.at(i).z -= penetration +0.001; }
-		else if (voxels.at(i).z-40<0 && (voxels.at(i).z-40- VOXEL_WIDTH/2)<= far_wall) {
+		else if (voxels.at(i).z-40<0 && (voxels.at(i).z-40- voxel_width/2)<= far_wall) {
 			voxels.at(i).velocity.z = -voxels.at(i).velocity.z;
-			penetration = VOXEL_WIDTH/2 - ( - far_wall + voxels.at(i).z-40);
+			penetration = voxel_width/2 - ( - far_wall + voxels.at(i).z-40);
 			voxels.at(i).z += penetration +0.001; }
 	}
 }
 
-void checkVoxelCollisions( std::vector<Voxel> &voxels){
+void checkVoxelCollisions( std::vector<Voxel> &voxels, float voxel_width){
 	//StartCounter();
 
 	float e=1.0;    //this is factor of restitution
@@ -130,9 +129,9 @@ void checkVoxelCollisions( std::vector<Voxel> &voxels){
 	//check collisions with each other
 	for (int i=0; i<int(voxels.size()); i++){
 		for (int j=i+1; j<int(voxels.size()); j++){
-			if (abs(voxels.at(i).x-voxels.at(j).x)<(3*VOXEL_WIDTH/2) && 
-			    abs(voxels.at(i).y-voxels.at(j).y)<(3*VOXEL_WIDTH/2) && 
-			    abs(voxels.at(i).z-voxels.at(j).z)<(3*VOXEL_WIDTH/2) &&
+			if (abs(voxels.at(i).x-voxels.at(j).x)<(3*voxel_width/2) && 
+			    abs(voxels.at(i).y-voxels.at(j).y)<(3*voxel_width/2) && 
+			    abs(voxels.at(i).z-voxels.at(j).z)<(3*voxel_width/2) &&
 				!voxels.at(i).velocity.equals( voxels.at(j).velocity)  ) 
 			{
 				sqr_dist = pow(voxels.at(i).x-voxels.at(j).x,2) + \
@@ -140,7 +139,7 @@ void checkVoxelCollisions( std::vector<Voxel> &voxels){
 						   pow(voxels.at(i).z-voxels.at(j).z,2);
 
 				// voxels.at(i)=p1, voxels.at(j)=p2
-				if (sqr_dist<= (pow(VOXEL_WIDTH,2)-0.0001)){
+				if (sqr_dist<= (pow(voxel_width,2)-0.0001)){
 					dist = sqrt( sqr_dist);
 
 					normal.insert( voxels.at(j).x-voxels.at(i).x, voxels.at(j).y-voxels.at(i).y, voxels.at(j).z-voxels.at(i).z); 
@@ -150,7 +149,7 @@ void checkVoxelCollisions( std::vector<Voxel> &voxels){
 						
 					Vn = Vab.dotproduct( normal);
 					if (Vn>=0){
-					    penetration = VOXEL_WIDTH- dist;
+					    penetration = voxel_width- dist;
 						jf= -(1+e)*Vn/2;   // masses are unit
 
 						voxels.at(i).velocity.insert( voxels.at(i).velocity.x+ jf*normal.x, voxels.at(i).velocity.y+ jf*normal.y, voxels.at(i).velocity.z+ jf*normal.z);

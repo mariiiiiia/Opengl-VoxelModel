@@ -10,6 +10,7 @@ extern VoxelModel voxel_model;
 extern std::string obj_file;
 //extern std::vector< std::vector< std::vector<Point> >> buckets;
 static std::vector< Triangle> newTriangles;
+static std::vector< Point> newVertices;
 
 //-------- Functions --------------------------------
 

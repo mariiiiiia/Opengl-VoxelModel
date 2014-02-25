@@ -15,6 +15,7 @@
 
 void showObj(const std::vector<Point> &vert,const std::vector<Triangle> &tr, bool solid,bool wireframe, const std::vector<Vector> vertNormal, int texture)
 {
+	glEnable(GL_CULL_FACE);
 	// variables for spherical transformations - for the body
 	Point spheric_coord1;
 	Point spheric_coord2;
@@ -65,7 +66,7 @@ void showObj(const std::vector<Point> &vert,const std::vector<Triangle> &tr, boo
 			}
 			else{																	// without texture solid
 				glBegin(GL_TRIANGLES);
-					glColor4f(1.0,0.8,0.8,0.8);
+					glColor4f(1.0,0.8,0.8,1.0);
 
 					glNormal3f(vertNormal.at(tr.at(i).p1).x, vertNormal.at(tr.at(i).p1).y, vertNormal.at(tr.at(i).p1).z);
 					glVertex3f( vert.at(tr.at(i).p1).x, vert.at(tr.at(i).p1).y, vert.at(tr.at(i).p1).z);

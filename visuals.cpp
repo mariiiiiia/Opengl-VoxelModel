@@ -11,6 +11,7 @@
 #include "soil/SOIL.h"
 #include "FreeFall.h"
 #include "triangulateVoxelModel.h"
+#include "histograms.h"
 #include "counter.h"
 
 
@@ -48,6 +49,8 @@ static bool rewind_free_fall=false;
 static std::vector< std::vector<Voxel>> voxel_data;
 //--------- retriangulate mesh -----
 static bool retriangulate=false;
+//--------- histogram ---------
+static bool histogram_state=false;
 
 void Render()
 {    
@@ -74,7 +77,7 @@ void Render()
 		load_obj=false;
 	}
 	//-------draw background------
-	//setRoom();
+	setRoom();
 
 	//---- bring object at the center of the window so we can see it -----------
 	glTranslatef(0,0,-20);
@@ -111,12 +114,11 @@ void Render()
 	//======================= VOXEL MODEL =======================================
 	//--------------- set voxels -----------------------------------------------
 	if ((voxel_model_state==true || sphere_voxels==true || free_fall==true) && test_voxel==false) {
-		voxel_model.setVoxels( vertices, triangles, normal);	}
+		voxel_model.setVoxels( vertices, triangles, normal);}
 	//-------------------- SHOW VOXEL MODEL -----------------
 	if (voxel_model_state && !retriangulate){
 		if (test_voxel==false){
 			voxel_model.drawVoxel();
-			//drawVoxel( voxels.at(0).width());
 		}
 		// test voxelization
 		else {
@@ -155,10 +157,10 @@ void Render()
 	if (free_fall){		
 		//StartCounter();
 		// check floor collisions
-		checkFloorCollisions( voxel_model.voxels, tx,ty,tz, dt);	
+		checkFloorCollisions( voxel_model.voxels, voxel_model.voxel_width, tx,ty,tz, dt);	
 
 		//check collisions with each other
-		checkVoxelCollisions( voxel_model.voxels);
+		checkVoxelCollisions( voxel_model.voxels, voxel_model.voxel_width);
 		//checkVoxelCollisionsInBuckets( voxels, voxelVelocity);
 
 		//simulate free falling
@@ -167,18 +169,18 @@ void Render()
 	}
 	//---------------- JUST SHOW SPHERE VOXELS or LET THEM FALL FREE -----------
 	if (sphere_voxels || free_fall){
-		drawSphereVoxels( voxel_model.voxels );
+		drawSphereVoxels( voxel_model.voxels, voxel_model.voxel_width);
 		
 		//printf("total delay %f\n", GetCounter());
 	}
 	//----------------- REWIND FREE FALLING -----------------
 	else if (rewind_free_fall){
 		if (voxel_data.size()>1) {
-			drawSphereVoxels( voxel_data.back());
+			drawSphereVoxels( voxel_data.back(), voxel_model.voxel_width);
 			voxel_data.pop_back();
 		}
 		else {
-			drawSphereVoxels( voxel_data.back());
+			drawSphereVoxels( voxel_data.back(), voxel_model.voxel_width);
 			voxel_data.pop_back();
 			voxel_model.voxels.clear();
 			rewind_free_fall = !rewind_free_fall;
@@ -187,13 +189,22 @@ void Render()
 		}
 	}
 	//============= RETRIANGULATE MESH THROUGH VOXEL DATA =========
-	if (retriangulate)	{  
-		//StartCounter();
-		marchingCubes( voxel_model, vertices, newTriangles);
-		//printf("cnt=%f\n", GetCounter());
+	if (retriangulate) {
+		marchingCubes( voxel_model, vertices, newTriangles, newVertices);
 	}
 	glPopMatrix();
-
+	//================= show histogram of the newTriangles[] angles ============
+	if (histogram_state) {
+		// Create new window
+		glutCreateWindow("Histograms");
+		Setup();
+		glutDisplayFunc(drawHistogram);
+		glutReshapeFunc(Resize);
+		
+		triangleAngleHistogram( newTriangles, newVertices, triangles, vertices);
+		//triangleAngleHistogram( triangles, vertices, 0,1,0);
+		histogram_state = false;
+	}
 	//-------- draw spheres for light --------
 	if (light1_state==true){
 		glPushMatrix();
@@ -292,7 +303,7 @@ void Keyboard(unsigned char key,int x,int y)
 		{
 			if (obj_file=="objects/unicorn_low.obj"){
 				horseTexture = loadTexture("images/horse3.png");
-				hornTexture = loadTexture("images/horn2.png");
+				hornTexture = loadTexture("images/horn1.png");
 			}
 			else if (obj_file=="objects/hand.obj") handTexture = loadTexture("images/hand1.png");
 			break;
@@ -345,8 +356,8 @@ void Keyboard(unsigned char key,int x,int y)
 		case '2': {obj_file = "objects/hand.obj"; load_obj=true; voxel_model.voxels.clear(); newTriangles.clear(); break;}
 		case '3': {obj_file = "objects/3D_1.obj"; load_obj=true; voxel_model.voxels.clear(); newTriangles.clear(); break;}
 		case '4': {obj_file = "objects/3D_2.obj"; load_obj=true; voxel_model.voxels.clear(); newTriangles.clear(); break;}
-		case '5': {obj_file = "objects/head.obj"; load_obj=true; voxel_model.voxels.clear(); newTriangles.clear(); break;}
-		//------------ voxelize odr not -------------
+		case '5': {obj_file = "objects/sfaira_2.obj"; load_obj=true; voxel_model.voxels.clear(); newTriangles.clear(); break;}
+		//------------ voxel model keys -------------
 		case 'D': 
 			voxel_model_state = true; test_voxel = true; voxel_model.voxels.clear(); 
 			initiateVelocities( voxel_model.voxels);
@@ -370,10 +381,18 @@ void Keyboard(unsigned char key,int x,int y)
 		case 'e': 
 			voxel_model_state = false; sphere_voxels=false; free_fall=false; 
 			voxel_model.voxels.clear();
+			voxel_model.mc.clear();
 			initiateVelocities( voxel_model.voxels);
 			break;
+		case 61:		// + key
+			if (voxel_model_state) {
+				voxel_model.voxels.clear();	voxel_model.mc.clear(); newTriangles.clear();
+				voxel_model.voxel_width=voxel_model.setUpVoxelWidth();
+				printf("+ pressed\n");
+			}
+			break;
 		//====== rewind =======
-		case 32:
+		case 32:	// space bar
 			if ( free_fall){
 				rewind_free_fall = true; free_fall=false; voxel_model_state = false; sphere_voxels=false;
 			}
@@ -385,6 +404,11 @@ void Keyboard(unsigned char key,int x,int y)
 			break;
 		case 'i':
 			retriangulate = false;
+			break;
+		//====== show histogram ========
+		case 'h':
+			if (!newTriangles.empty()){
+				histogram_state=!histogram_state;}
 			break;
 		default : break;
 		}	
@@ -527,7 +551,7 @@ void lightSources()
 	if (light1_state==false) glDisable(GL_LIGHT1);
 	else if (light1_state==true){
 		//GLfloat light_position1[] = { -8, 5, -10, 1.0 };
-		GLfloat light_position1[] = { 0, 0, -30, 1.0 };
+		GLfloat light_position1[] = { 0, 0, 0, 1.0 };
 		GLfloat specularLight1[] = { 0.3, 1.0, 0.0, 1.0 };
 		//GLfloat spotDir1[] = { 0, 0, 0, 1.0};
 
@@ -544,7 +568,7 @@ void lightSources()
 	if (light2_state==false) glDisable(GL_LIGHT2);
 	else if (light2_state==true){
 		//GLfloat light_position2[] = { 8, 5, -10, 1.0 };
-		GLfloat light_position2[] = { 0, 0, 40, 1.0 };
+		GLfloat light_position2[] = { 0, 0, 0, 1.0 };
 		GLfloat specularLight2[] = { 1.0, 0.2, 0.0, 1.0 };
 		//GLfloat spotDir2[] = {0.0, 0.0, 0.0};
 
@@ -591,8 +615,8 @@ void Setup()  // TOUCH IT !!
 	// polygon rendering mode
 	glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 	
-	//glEnable(GL_CULL_FACE);
-	//glFrontFace(GL_CCW);
+	glEnable(GL_CULL_FACE);
+	glFrontFace(GL_CCW);
 	
 	glColorMaterial( GL_FRONT, GL_AMBIENT_AND_DIFFUSE );
 

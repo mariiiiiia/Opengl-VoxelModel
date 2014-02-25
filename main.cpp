@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
   glutInitWindowPosition(50,50);
   
   // Create and label the main window
-  glutCreateWindow("Course5");
+  glutCreateWindow("Cool Project");
   
   // Configure various properties of the OpenGL rendering context
   Setup();
