@@ -1,5 +1,7 @@
 This app implements .obj Rendering, Voxelization in different resolutions, Re-triangulation (this is BETA), rendering voxels as spheres and simulating free falling with gravity force and collisions between spheres themselves and the room.
 
+![alt text](https://github.com/mariiiiiia/Opengl-VoxelModel/blob/master/presentation.gif "This is a Presentation .gif")
+
 q-w, a-s, z-x: move object on x,y,z axes
 
 o-p, k-l, n-m: rotate object 
