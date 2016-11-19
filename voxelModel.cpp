@@ -541,16 +541,14 @@ bool checkLineTriangleIntersection( TriangleCoord tri, Vector normal, Point lp1,
 	// plane equation: Ax+By+Cz=D
 	// compute triangle vectors
 	Vector ab,bc,ca,ac, line_dir;
-	ab.insert(tp2.x-tp1.x, tp2.y-tp1.y, tp2.z-tp1.z);  // vector tp1->tp2
-	bc.insert(tp3.x-tp2.x, tp3.y-tp2.y, tp3.z-tp2.z);  // vector tp2->tp3
-	ca.insert(tp1.x-tp3.x, tp1.y-tp3.y, tp1.z-tp3.z);  // vector tp3->tp1
-	ac.insert(tp3.x-tp1.x, tp3.y-tp1.y, tp3.z-tp1.z);  // vector tp1->tp3
+	ab.set( tp1, tp2);  // vector tp1->tp2
+	bc.set( tp2, tp3);  // vector tp2->tp3
+	ca.set( tp3, tp1);  // vector tp3->tp1
+	ac.set( tp1, tp3);  // vector tp1->tp3
 	// calculate NOT normalized normal
 	//normal = ab.crossProduct(ac);
 	// calculate line direction 
-	line_dir.insert( lp2.x-lp1.x, \
-					 lp2.y-lp1.y, \
-					 lp2.z-lp1.z);
+	line_dir.set( lp1, lp2);
 	//float dist =  sqrt( pow(line_dir.x,2)+ pow(line_dir.y,2)+ pow(line_dir.z,2));
 	//line_dir.insert( line_dir.x/dist, line_dir.y/ dist, line_dir.z/ dist);
 	// check if line and triangle plane are parallel
@@ -571,31 +569,26 @@ bool checkLineTriangleIntersection( TriangleCoord tri, Vector normal, Point lp1,
 	// that's legal if triangles are counter-clockwise
 	//------------------------------------------------------
 	Vector ap,bp,cp;
-	ap.insert( interp.x-tp1.x, \
-			   interp.y-tp1.y, \
-			   interp.z-tp1.z);     //vector tp1->interp
+	ap.set( tp1, interp);     //vector tp1->interp
 	Vector n1;
 	n1 = ab.crossProduct(ap);
 	float dotpr0 = normal.dotproduct(n1);
 	if (dotpr0<0) return false;  // interp is on the right side 
 
-	bp.insert( interp.x-tp2.x, \
-			   interp.y-tp2.y, \
-			   interp.z-tp2.z);
+	bp.set( tp2, interp);
 	Vector n2;
 	n2 = bc.crossProduct(bp);
 	float dotpr1 = normal.dotproduct(n2);
 	if (dotpr1<0) return false;  // interp is on the right side
 		
-	cp.insert( interp.x-tp3.x, \
-			   interp.y-tp3.y, \
-			   interp.z-tp3.z);
+	cp.set( tp3, interp);
 	Vector n3;
 	n3 = ca.crossProduct(cp);
 	float dotpr2 = normal.dotproduct(n3);
 	if (dotpr2<0) return false;  // interp is on the right side
 
-
+	/*interpoint.insert( interp);
+	return true;*/
 	if (line_dir.y!=0){
 		if ( (interp.y<=lp1.y && interp.y>=lp2.y) || (interp.y>=lp1.y && interp.y<=lp2.y) ) {
 			interpoint.insert( interp);
@@ -615,18 +608,18 @@ bool checkLineTriangleIntersection( TriangleCoord tri, Vector normal, Point lp1,
 		else return false;		
 	}
 
-	//glColor3f( 1, 0.3,1);
-	//glBegin( GL_POLYGON);
-	//glVertex3f( interp.x, interp.y, interp.z);
-	//glVertex3f( interp.x+0.1, interp.y, interp.z);
-	//glVertex3f( interp.x, interp.y+0.1, interp.z);
-	//glEnd();
-	//glBegin( GL_POLYGON);
-	//glVertex3f( interp.x, interp.y, interp.z);
-	//glVertex3f( interp.x, interp.y+0.1, interp.z);
-	//glVertex3f( interp.x+0.1, interp.y, interp.z);
-	//glEnd();
-	//return true;
+	/*glColor3f( 1, 0.3,1);
+	glBegin( GL_POLYGON);
+	glVertex3f( interp.x, interp.y, interp.z);
+	glVertex3f( interp.x+0.1, interp.y, interp.z);
+	glVertex3f( interp.x, interp.y+0.1, interp.z);
+	glEnd();
+	glBegin( GL_POLYGON);
+	glVertex3f( interp.x, interp.y, interp.z);
+	glVertex3f( interp.x, interp.y+0.1, interp.z);
+	glVertex3f( interp.x+0.1, interp.y, interp.z);
+	glEnd();
+	return true;*/
 	interpoint.insert(interp);
 	return false;
 }
@@ -666,18 +659,31 @@ float VoxelModel::setUpVoxelWidth(){
 	float w4=VOXEL_WIDTH4;
 	float w5=VOXEL_WIDTH5;
 
+	//if (w==w1) {
+	//	w=w2;}
+	//else if (w==w2) {
+	//	w=w3;}
+	//else if (w==w3) {
+	//	w=w4;}
+	//else if (w==w4) {
+	//	w=w5;}
+	//else if (w==w5) {
+	//	w=w1;}
+	//else if (w==NULL) {
+	//	w=w3;}
+
 	if (w==w1) {
-		w=w2;}
-	else if (w==w2) {
-		w=w3;}
-	else if (w==w3) {
-		w=w4;}
-	else if (w==w4) {
 		w=w5;}
-	else if (w==w5) {
+	else if (w==w2) {
 		w=w1;}
-	else if (w==NULL) {
+	else if (w==w3) {
+		w=w2;}
+	else if (w==w4) {
 		w=w3;}
+	else if (w==w5) {
+		w=w4;}
+	else if (w==NULL) {
+		w=w5;}
 
 	return w;
 }

@@ -74,6 +74,13 @@ public:
 		this->z=z;
 	}
 
+	void set( Point a, Point b){
+		// a is starting point and b target point
+		this->x = b.x-a.x;
+		this->y = b.y-a.y;
+		this->z = b.z-a.z;
+	}
+
 	Vector operator- (Vector v){
 		Vector new_v;
 		new_v.x= this->x-v.x;
